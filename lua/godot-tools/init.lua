@@ -6,7 +6,7 @@ M.config = {
   godot_bin = (vim.uv.os_uname().sysname:match ".*[wW]indows.*" ~= nil) and "godot_console" or "godot",
   ---@type boolean whether we should auto start the server
   auto_connect = true,
-  ---@type string where we should listen for remote events
+  ---@type string where we should listen for remote events, can be a ip addr or named pipe
   listen_addr = "127.0.0.1:6004",
 }
 
