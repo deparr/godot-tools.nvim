@@ -14,7 +14,7 @@ function godot_path.new(opts, _)
 end
 
 function godot_path:enabled()
-  return vim.list_contains(enabled_fts, vim.bo.ft) and require("util").in_gdproj
+  return vim.list_contains(enabled_fts, vim.bo.ft)
 end
 
 function godot_path:get_trigger_characters()
@@ -26,7 +26,7 @@ end
 function godot_path:get_completions(context, callback)
   callback = vim.schedule_wrap(callback)
 
-  local lib = require "dpar.godot.blink.lib"
+  local lib = require "godot-tools.blink.lib"
 
   local dirname = lib.dirname(context)
   if not dirname then
@@ -50,13 +50,14 @@ end
 
 function godot_path:execute(context, item, callback, default_implementation)
   default_implementation()
-  callback()
-
+  -- todo this doesnt do anything and neither does the
+  -- completion.trigger.show_on_accept_on_trigger_character option
   if item.label:sub(-1) == "/" then
     vim.schedule(function()
       require("blink.cmp").show { trigger = { kind = "manual" } }
     end)
   end
+  callback()
 end
 
 return godot_path

@@ -36,7 +36,7 @@ function godot_uid.new(opts, _)
 end
 
 function godot_uid:enabled()
-  return (vim.list_contains(enabled_fts, vim.bo.ft)) and require("util").in_gdproj
+  return vim.list_contains(enabled_fts, vim.bo.ft)
 end
 
 function godot_uid:get_trigger_characters()

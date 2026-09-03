@@ -40,7 +40,6 @@ function M.candidates(context, dirname, opts)
   local results = {}
   local cancelled = false
 
-  -- Prevents excessive memory growth when scanning huge directories
   local mem_usage_kb = collectgarbage "count"
   local threshold_kb = 100 * 1024 -- 100Mb
   if mem_usage_kb > threshold_kb then
