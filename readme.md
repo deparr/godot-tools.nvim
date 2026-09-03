@@ -34,14 +34,3 @@ return {
 }
 ```
 
-### todo
-
-In no particular order
-
-- [ ] fix blink integration
-  - res:// paths are always shown ??
-- [ ] tscn tree previewer
-- [ ] health checks + docs
-- [ ] proper config management
-- [ ] types
-
