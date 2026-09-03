@@ -2,7 +2,7 @@ local log = require "godot-tools.log"
 
 local M = {}
 
---@param ctx GDToolsCommandContext
+---@param ctx gdtools.Command.Context
 function M.open(ctx)
   local file_name_abs = ctx.args[1]
   local file_name = vim.fn.fnamemodify(file_name_abs, ":p:.")
@@ -50,7 +50,7 @@ function M.open(ctx)
   vim.api.nvim_win_set_cursor(target_win, { file_line, file_col })
 end
 
---@param ctx GDToolsCommandContext
+---@param ctx gdtools.Command.Context
 function M.connect(ctx)
   local remote_addr = ctx.args[1] or "127.0.0.1:6004"
   local connected_servers = vim.fn.serverlist()

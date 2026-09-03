@@ -5,18 +5,22 @@ local log = require "godot-tools.log"
 
 local api = vim.api
 
+---@class gdtools.Run.State
 M.state = {
   ---@type string?
   main_scene = nil,
   ---@type string?
   last_scene = nil,
+  ---@type integer
   console_buf = -1,
+  ---@type integer
   console_win = -1,
 }
 
-local extract_main_uid = require("util").extractor 'run/main_scene.*=.*%"(uid://.*)%"'
+local extract_main_uid = require("godot-tools.util").extractor 'run/main_scene.*=.*%"(uid://.*)%"'
 
---@param ctx GDToolsCommandContext
+--- Run the projects main scene
+---@param ctx gdtools.Command.Context
 function M.main(ctx)
   if not M.state.main_scene then
     -- todo this sucks
@@ -31,7 +35,8 @@ function M.main(ctx)
   M.scene(ctx)
 end
 
---@param ctx GDToolsCommandContext
+--- Run the last scene run with M.scene
+---@param ctx gdtools.Command.Context
 function M.last(ctx)
   if not M.state.last_scene then
     if #ctx.args < 1 then
@@ -44,7 +49,8 @@ function M.last(ctx)
   M.scene(ctx)
 end
 
---@param ctx GDToolsCommandContext
+--- Run a specific scene
+---@param ctx gdtools.Command.Context
 function M.scene(ctx)
   if #ctx.args < 1 then
     log.error "need a scene to run!"
@@ -75,6 +81,7 @@ function M.scene(ctx)
   vim.cmd "startinsert"
 end
 
+--- toggles visibility of the godot console buffer
 function M.toggle_console()
   if not api.nvim_buf_is_valid(M.state.console_buf) then
     log.warn("bufnr %d is invalid", M.state.console_buf)

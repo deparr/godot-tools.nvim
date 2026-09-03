@@ -1,18 +1,21 @@
 if vim.fn.exists ":Godot" == 2 then
 end
 
-local function parse(args)
-  local split = vim.split(vim.trim(args), "%s+")
+---@param cmd_line string
+---@return string cmd_name, string[] args
+local function parse(cmd_line)
+  local split = vim.split(vim.trim(cmd_line), "%s+")
   -- for completions
-  if vim.startswith(args, "Godot") then
+  if vim.startswith(cmd_line, "Godot") then
     table.remove(split, 1)
   end
-  if args:sub(-1) == " " then
+  if cmd_line:sub(-1) == " " then
     split[#split + 1] = ""
   end
   return table.remove(split, 1) or "", split
 end
 
+---@type table<string, gdtools.Command>
 local commands = {
   connect = {
     fn = function(ctx)
@@ -38,6 +41,7 @@ local commands = {
   scene = {
     fn = function(ctx)
       if #ctx.args < 1 and not ctx.bang then
+        -- todo this should be a generic 'find' module
         require("godot-tools.telescope").pick_tscn(nil, function(uid)
           ctx.args = { uid }
           require("godot-tools.run").scene(ctx)
@@ -55,6 +59,7 @@ local commands = {
   },
 }
 
+---@param ctx gdtools.Command.Context
 local function run_command(ctx)
   local log = require "godot-tools.log"
   local cmd = commands[ctx.cmd]
