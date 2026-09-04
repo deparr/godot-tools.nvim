@@ -1,0 +1,131 @@
+local Parser = require("godot-tools.resource.parser")
+
+local M = {}
+
+---@enum Tag
+local Tag = {
+  ROOT_RESOURCE = "gd_resouce",
+  ROOT_SCENE = "gd_scene",
+  SUB_RESOURCE = "sub_resource",
+  EXT_RESOURCE = "ext_resource",
+  NODE = "node",
+  RESOURCE = "resource",
+
+}
+
+---@param path string path to load from
+---@param expected_type string? expected type of loaded resource
+---@return gdtools.Resource
+function M.load(path, expected_type)
+  local f = io.open(path, "r")
+  if not f then
+    error(("failed to open file: %s"):format(path))
+  end
+  local source = f:read("a")
+  return M.load_str(source, expected_type)
+end
+
+---@param source string source to load from
+---@param expected_type? string expected type of loaded resource
+---@return gdtools.Resource
+function M.load_str(source, expected_type)
+  local parser = Parser.new(source)
+  local res, sub_resources = {}, {}
+  res.sub_resources = sub_resources
+  local found_main_tag = false
+  for block in parser:block_stream() do
+    if block.tag == Tag.ROOT_RESOURCE then
+      found_main_tag = true
+      res.type = block.attrs.type
+      res.format = block.attrs.format
+      res.uid = block.attrs.uid
+
+    elseif block.tag == Tag.SUB_RESOURCE then
+      local sub_res = {
+        type = block.attrs.type,
+        id = block.attrs.id,
+        values = block.values,
+      }
+      sub_resources[#res.sub_resources + 1] = sub_res
+
+    elseif block.tag == Tag.RESOURCE then
+      res.values = block.values
+    else
+      vim.notify(("TODO unexpected block.tag in resource: %s"):format(block.tag))
+    end
+  end
+
+  if not found_main_tag then
+    vim.notify("Did not find main tag for resource", vim.log.levels.ERROR)
+  end
+
+  return res
+end
+
+---@param path string path to load from
+---@return gdtools.Scene
+function M.load_scene(path)
+  local f = io.open(path, "r")
+  if not f then
+    error(("failed to open file: %s"):format(path))
+  end
+  local source = f:read("a")
+  return M.load_scene_str(source)
+end
+
+---@param source string string to load from
+---@return gdtools.Scene
+function M.load_scene_str(source)
+  local parser = Parser.new(source)
+  local scene, ext_resources, sub_resources, nodes = {}, {}, {}, {}
+  scene.ext_resources = ext_resources
+  scene.sub_resources = sub_resources
+  scene.nodes = nodes
+  local found_main_tag = false
+  for block in parser:block_stream() do
+
+    if block.tag == Tag.ROOT_SCENE then
+      found_main_tag = true
+      scene.format = block.attrs.format
+      scene.uid = block.attrs.uid
+
+    elseif block.tag == Tag.EXT_RESOURCE then
+      local ext_res = {
+        type = block.attrs.type,
+        uid = block.attrs.uid,
+        path = block.attrs.path,
+        id = block.attrs.id,
+      }
+      ext_resources[#scene.ext_resources + 1] = ext_res
+
+    elseif block.tag == Tag.SUB_RESOURCE then
+      local sub_res = {
+        type = block.attrs.type,
+        id = block.attrs.id,
+        values = block.values,
+      }
+      sub_resources[#scene.sub_resources + 1] = sub_res
+
+    elseif block.tag == Tag.NODE then
+      local node = {
+        name = block.attrs.name,
+        type = block.attrs.type,
+        parent = block.attrs.parent,
+        unique_id = block.attrs.unique_id,
+        instance = block.attrs.instance,
+        values = block.values,
+      }
+      nodes[#scene.nodes + 1] = node
+    else
+      vim.notify(("TODO unexpected block.tag in scene: %s"):format(block.tag))
+    end
+  end
+
+  if not found_main_tag then
+    vim.notify("Did not find main tag for scene", vim.log.levels.ERROR)
+  end
+
+  return scene
+end
+
+return M
