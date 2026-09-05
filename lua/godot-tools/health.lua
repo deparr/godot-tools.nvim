@@ -3,10 +3,17 @@ local M = {}
 ---@param addr string ip4 address to check
 ---@return boolean valid addr is a valid ip4 address
 local function check_ip(addr)
-  local a, b, c, d, p = addr:match("^(%d+)%.(%d+)%.(%d+)%.(%d+)%:(%d+)$")
-  if not a then return false end
-  a, b, c, d, p = math.floor(tonumber(a)), math.floor(tonumber(b)), math.floor(tonumber(c)), math.floor(tonumber(d)), math.floor(tonumber(p))
-  for _, octet in ipairs({a, b, c, d}) do
+  local a, b, c, d, p = addr:match "^(%d+)%.(%d+)%.(%d+)%.(%d+)%:(%d+)$"
+  if not a then
+    return false
+  end
+  a, b, c, d, p =
+    math.floor(tonumber(a)),
+    math.floor(tonumber(b)),
+    math.floor(tonumber(c)),
+    math.floor(tonumber(d)),
+    math.floor(tonumber(p))
+  for _, octet in ipairs({ a, b, c, d }) do
     if octet > 255 then
       return false
     end
@@ -28,7 +35,7 @@ function M.check()
   end
 
   local addr_is_valid = true
-  if config.listen_addr:find(":") then
+  if config.listen_addr:find ":" then
     addr_is_valid = check_ip(config.listen_addr)
   end
   if not addr_is_valid then

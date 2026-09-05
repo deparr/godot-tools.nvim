@@ -40,17 +40,16 @@ function M.scene_tree(scene, opts)
   for _, node in ipairs(scene.nodes) do
     if not node.parent then
       root = node
-      continue
-    end
-
-    local parent
-    if node.parent == "." then
-      parent = ""
     else
-      parent = "/" .. node.parent
+      local parent
+      if node.parent == "." then
+        parent = ""
+      else
+        parent = "/" .. node.parent
+      end
+      children[parent] = children[parent] or {}
+      children[parent][#children[parent] + 1] = node
     end
-    children[parent] = children[parent] or {}
-    children[parent][#children[parent] + 1] = node
   end
 
   local lines = {}
@@ -76,9 +75,10 @@ function M.scene_tree(scene, opts)
       -- icon
       hl_spans[#hl_spans + 1] = { line = linenr, col_beg = prefix_len, col_end = icon_end, group = icon_group }
       -- node name
-      hl_spans[#hl_spans + 1] = { line = linenr, col_beg = icon_end, col_end = node_name_end, group = "GDToolsSceneTreeNormal" }
+      hl_spans[#hl_spans + 1] =
+        { line = linenr, col_beg = icon_end, col_end = node_name_end, group = "GDToolsSceneTreeNormal" }
 
-      if opts.always_show_type or node_type != node.name then
+      if opts.always_show_type or node_type ~= node.name then
         -- node type
         hl_spans[#hl_spans + 1] = { line = linenr, col_beg = type_start, col_end = type_end, group = "GDToolsNodeType" }
         lines[#lines + 1] = ("%s%s%s %s  [%s]"):format(prefix, connector, icon, node.name, node_type)
@@ -102,16 +102,15 @@ function M.scene_tree(scene, opts)
   hl_spans[1] = { line = 0, col_beg = 0, col_end = icon_end, group = highlights.group_from_node(root.type) }
   -- root name
   hl_spans[2] = { line = 0, col_beg = icon_end, col_end = name_end, group = "GDToolsSceneTreeNormal" }
-  if opts.always_show_type or root.type != root.name then
+  if opts.always_show_type or root.type ~= root.name then
     -- root type
     hl_spans[3] = { line = 0, col_beg = type_start, col_end = type_end, group = "GDToolsNodeType" }
     lines[1] = ("%s %s  [%s]"):format(root_icon, root.name, root.type)
   else
-      lines[#lines + 1] = ("%s %s"):format(root_icon, root.name)
+    lines[#lines + 1] = ("%s %s"):format(root_icon, root.name)
   end
   walk("", 1, "")
   return lines, hl_spans
 end
-
 
 return M

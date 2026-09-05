@@ -48,7 +48,7 @@ function godot_uid:get_completions(context, callback)
 
   local line_before_cursor = context.line:sub(1, context.bounds.start_col - (context.bounds.length == 0 and 1 or 0))
   if not line_before_cursor:match "uid://" then
-    return callback { is_incomplete_forward = false, is_incomplete_backward = false, items = {} }
+    return callback({ is_incomplete_forward = false, is_incomplete_backward = false, items = {} })
   end
 
   if os.time() - cache.time >= cache_invalidate_threshold then
@@ -56,7 +56,7 @@ function godot_uid:get_completions(context, callback)
   end
 
   if cache.uids then
-    return callback { is_incomplete_forward = false, is_incomplete_backward = false, items = cache.uids }
+    return callback({ is_incomplete_forward = false, is_incomplete_backward = false, items = cache.uids })
   end
 
   -- vim.notify("shelling out for uids")
@@ -100,7 +100,7 @@ function godot_uid:get_completions(context, callback)
 
     cache.uids = items
     cache.time = os.time()
-    callback { is_incomplete_forward = false, is_incomplete_backward = false, items = items }
+    callback({ is_incomplete_forward = false, is_incomplete_backward = false, items = items })
   end)
 end
 

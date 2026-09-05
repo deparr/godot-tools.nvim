@@ -22,8 +22,8 @@ local extract_main_uid = require("godot-tools.util").extractor 'run/main_scene.*
 --- Run the projects main scene
 ---@param ctx gdtools.Command.Context
 function M.main(ctx)
+  -- todo this sucks, shouldn't copout with regex or ignore changes to the main scene
   if not M.state.main_scene then
-    -- todo this sucks
     local project_file = vim.fs.joinpath(vim.fn.getcwd(), "project.godot")
     M.state.main_scene = extract_main_uid(project_file)
     if not M.state.main_scene then

@@ -17,7 +17,7 @@ function M.setup(opts)
     -- todo this might be best run in a autocmd, especially if the plugin needs more
     -- things to run on startup
     vim.schedule(function()
-      require("godot-tools.editor").connect { args = { M.config.listen_addr } }
+      require("godot-tools.editor").connect({ args = { M.config.listen_addr } })
     end)
   end
 end

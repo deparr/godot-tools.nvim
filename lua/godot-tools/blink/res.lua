@@ -30,13 +30,13 @@ function godot_path:get_completions(context, callback)
 
   local dirname = lib.dirname(context)
   if not dirname then
-    return callback { is_incomplete_forward = false, is_incomplete_backward = false, items = {} }
+    return callback({ is_incomplete_forward = false, is_incomplete_backward = false, items = {} })
   end
 
   lib
     .candidates(context, dirname, self.opts)
     :map(function(candidates)
-      callback { is_incomplete_forward = false, is_incomplete_backward = false, items = candidates }
+      callback({ is_incomplete_forward = false, is_incomplete_backward = false, items = candidates })
     end)
     :catch(function()
       callback()
@@ -54,7 +54,7 @@ function godot_path:execute(context, item, callback, default_implementation)
   -- completion.trigger.show_on_accept_on_trigger_character option
   if item.label:sub(-1) == "/" then
     vim.schedule(function()
-      require("blink.cmp").show { trigger = { kind = "manual" } }
+      require("blink.cmp").show({ trigger = { kind = "manual" } })
     end)
   end
   callback()

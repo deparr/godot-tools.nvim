@@ -6,14 +6,16 @@ Parser.__index = Parser
 
 local function str2class(s)
   local cl = {}
-  for c in s:gmatch(".") do cl[c] = true end
+  for c in s:gmatch "." do
+    cl[c] = true
+  end
   return cl
 end
 
-Parser.whitespace = str2class(" \t\r\n")
-Parser.attr_num = str2class("0123456789.-e")
-Parser.value_num = str2class("0123456789.-abcdefABCDEFx")
-Parser.key_value_sep = str2class(" =")
+Parser.whitespace = str2class " \t\r\n"
+Parser.attr_num = str2class "0123456789.-e"
+Parser.value_num = str2class "0123456789.-abcdefABCDEFx"
+Parser.key_value_sep = str2class " ="
 
 Parser.pat_ident_cont = "^[%w_]$"
 Parser.pat_ident_start = "^[_%a]$"
@@ -24,7 +26,7 @@ Parser.pat_attr_num_start = "^[%-%d]$"
 function Parser.new(src)
   local parser = setmetatable({}, Parser)
   parser.src = src
-  if parser.src:sub(-1, -1) != "\n" then
+  if parser.src:sub(-1, -1) ~= "\n" then
     parser.src = parser.src .. "\n"
   end
   parser.pos = 1
@@ -33,8 +35,8 @@ end
 
 ---@return gdtools.Resource.Parser.Block[]
 function Parser:parse()
-  if self.pos != 1 then
-    error("parse() called on parser not at start")
+  if self.pos ~= 1 then
+    error "parse() called on parser not at start"
   end
   local blocks = {}
   local n = 1
@@ -51,7 +53,6 @@ function Parser:block_stream()
     return self:next()
   end
 end
-
 
 ---@return string # char currently pointed at
 function Parser:at()
@@ -70,7 +71,7 @@ end
 
 ---@param expected string expected char
 function Parser:expect(expected)
-  if self:at() != expected then
+  if self:at() ~= expected then
     error(("expected '%s', got '%s' at pos %d"):format(expected, self:at(), self.pos))
   end
   self:advance()
@@ -89,10 +90,10 @@ function Parser:next()
     self:skip_while_any(Parser.whitespace)
   end
 
-  self:expect("[")
+  self:expect "["
 
   local start = self.pos
-  local tag = self:take_until_any({[" "] = true, ["]"] = true})
+  local tag = self:take_until_any({ [" "] = true, ["]"] = true })
   local attrs = self:take_block_attrs()
   local values = self:take_block_values()
   local stop = self.pos
@@ -117,7 +118,7 @@ function Parser:take_while_any(to_take)
 end
 
 function Parser:skip_line()
-  while self:at() != "\n" do
+  while self:at() ~= "\n" do
     self:advance()
   end
   self:advance()
@@ -126,9 +127,8 @@ end
 ---@param char string char to stop at
 ---@return string span does not include `char`
 function Parser:take_until_char(char)
-  return self:take_until_any({[char] = true})
+  return self:take_until_any({ [char] = true })
 end
-
 
 ---@return string span does include `sent_char`
 function Parser:take_until_any(sent_chars)
@@ -137,7 +137,7 @@ function Parser:take_until_any(sent_chars)
     self:advance()
   end
   if self:eof() then
-    error("Unexpected eof")
+    error "Unexpected eof"
   end
   return self.src:sub(start, self.pos - 1)
 end
@@ -145,9 +145,8 @@ end
 ---@param char string char to stop at
 ---@return string span includes `char`
 function Parser:take_to_char(char)
-  return self:take_to_any({[char] = true})
+  return self:take_to_any({ [char] = true })
 end
-
 
 ---@return string span, includes `sent_char`
 function Parser:take_to_any(sent_chars)
@@ -156,7 +155,7 @@ function Parser:take_to_any(sent_chars)
     self:advance()
   end
   if self:eof() then
-    error("unexpected eof")
+    error "unexpected eof"
   end
   local span = self.src:sub(start, self.pos)
   self:advance()
@@ -172,7 +171,7 @@ function Parser:take_block_attrs()
     if cur:match(Parser.pat_ident_start) then
       local key = self:take_until_any(Parser.key_value_sep)
       self:skip_while_any(Parser.whitespace)
-      self:expect("=")
+      self:expect "="
       self:skip_while_any(Parser.whitespace)
       local value = self:take_variant(Parser.attr_num)
       attrs[key] = value
@@ -181,12 +180,12 @@ function Parser:take_block_attrs()
     elseif cur == "]" then
       break
     elseif cur == "[" then
-      error("TODO Nested block header!")
+      error "TODO Nested block header!"
     end
   end
 
   if self:eof() then
-    error("unexpected eof")
+    error "unexpected eof"
   end
 
   self:advance()
@@ -207,7 +206,7 @@ function Parser:take_variant(allowed_num_chars)
     self:advance()
     local start = self.pos
     cur = self:at()
-    while cur != '"' do
+    while cur ~= '"' do
       if cur == "\\" then
         if self:peek() == '"' then
           self:advance()
@@ -216,18 +215,16 @@ function Parser:take_variant(allowed_num_chars)
       self:advance()
       cur = self:at()
       if self:eof() then
-        error("Unexpected eof")
+        error "Unexpected eof"
       end
     end
     local str_value = self.src:sub(start, self.pos - 1)
     self:advance()
     return is_stringname and { stringname = str_value } or str_value
-
   elseif cur:match(Parser.pat_attr_num_start) then
     local raw = self:take_while_any(allowed_num_chars)
     local num = tonumber(raw) or error(("invalid num in take_variant: %d"):format(self.pos))
     return num
-
   elseif cur:match(Parser.pat_ident_start) then
     local checkpoint = self.pos
     if cur == "t" or cur == "f" then
@@ -237,7 +234,7 @@ function Parser:take_variant(allowed_num_chars)
       end
     end
     self.pos = checkpoint
-    local call_expr = self:take_to_char(")")
+    local call_expr = self:take_to_char ")"
     return { call_expr = call_expr }
   else
     error(("Unexpected '%s' at pos %d"):format(cur, self.pos))
@@ -248,7 +245,7 @@ end
 function Parser:take_block_values()
   self:skip_while_any(Parser.whitespace)
   local values = {}
-  while not self:eof() and self:at() != "[" do
+  while not self:eof() and self:at() ~= "[" do
     local cur = self:at()
     if not cur:match(Parser.pat_ident_start) then
       error(("Unexpected '%s' at pos %d"):format(cur, self.pos))
@@ -256,7 +253,7 @@ function Parser:take_block_values()
 
     local key = self:take_until_any(Parser.key_value_sep)
     self:skip_while_any(Parser.whitespace)
-    self:expect("=")
+    self:expect "="
     self:skip_while_any(Parser.whitespace)
     local value = self:take_variant(Parser.value_num)
     values[key] = value

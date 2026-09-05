@@ -1,13 +1,13 @@
 local M = {}
 
-local telescope = require 'telescope'
+local telescope = require "telescope"
 local pickers = require "telescope.pickers"
 local finders = require "telescope.finders"
 local conf = require("telescope.config").values
 local actions = require "telescope.actions"
 local action_state = require "telescope.actions.state"
 
-local gd_previewers = require('godot-tools.telescope.previewers')
+local gd_previewers = require "godot-tools.telescope.previewers"
 
 --- requires `fd` to be installed
 ---

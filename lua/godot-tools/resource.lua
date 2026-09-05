@@ -1,7 +1,7 @@
-local Parser = require("godot-tools.resource.parser")
+local Parser = require "godot-tools.resource.parser"
 local log = require "godot-tools.log"
 
-local cache = require("godot-tools.resource.cache")
+local cache = require "godot-tools.resource.cache"
 
 local M = {}
 
@@ -13,7 +13,6 @@ local Tag = {
   EXT_RESOURCE = "ext_resource",
   NODE = "node",
   RESOURCE = "resource",
-
 }
 
 ---@param path string path to load from
@@ -28,7 +27,7 @@ function M.load(path, expected_type)
   if not f then
     error(("failed to open file: %s"):format(path))
   end
-  local source = f:read("a")
+  local source = f:read "a"
   return M.load_str(source, expected_type)
 end
 
@@ -46,7 +45,6 @@ function M.load_str(source, expected_type)
       res.type = block.attrs.type
       res.format = block.attrs.format
       res.uid = block.attrs.uid
-
     elseif block.tag == Tag.SUB_RESOURCE then
       local sub_res = {
         type = block.attrs.type,
@@ -54,7 +52,6 @@ function M.load_str(source, expected_type)
         values = block.values,
       }
       sub_resources[#res.sub_resources + 1] = sub_res
-
     elseif block.tag == Tag.RESOURCE then
       res.values = block.values
     else
@@ -63,7 +60,7 @@ function M.load_str(source, expected_type)
   end
 
   if not found_main_tag then
-    log.error("Did not find main tag for resource")
+    log.error "Did not find main tag for resource"
   end
 
   return res
@@ -80,7 +77,7 @@ function M.load_scene(path)
   if not f then
     error(("failed to open file: %s"):format(path))
   end
-  local source = f:read("a")
+  local source = f:read "a"
   f:close()
   return M.load_scene_str(source)
 end
@@ -95,12 +92,10 @@ function M.load_scene_str(source)
   scene.nodes = nodes
   local found_main_tag = false
   for block in parser:block_stream() do
-
     if block.tag == Tag.ROOT_SCENE then
       found_main_tag = true
       scene.format = block.attrs.format
       scene.uid = block.attrs.uid
-
     elseif block.tag == Tag.EXT_RESOURCE then
       local ext_res = {
         type = block.attrs.type,
@@ -109,7 +104,6 @@ function M.load_scene_str(source)
         id = block.attrs.id,
       }
       ext_resources[#ext_resources + 1] = ext_res
-
     elseif block.tag == Tag.SUB_RESOURCE then
       local sub_res = {
         type = block.attrs.type,
@@ -117,7 +111,6 @@ function M.load_scene_str(source)
         values = block.values,
       }
       sub_resources[#sub_resources + 1] = sub_res
-
     elseif block.tag == Tag.NODE then
       local node = {
         name = block.attrs.name,
@@ -128,14 +121,13 @@ function M.load_scene_str(source)
         values = block.values,
       }
       nodes[#nodes + 1] = node
-
     else
       log.warn(("TODO unexpected block.tag in scene: %s"):format(block.tag))
     end
   end
 
   if not found_main_tag then
-    log.error("Did not find main tag for scene")
+    log.error "Did not find main tag for scene"
   end
 
   return scene

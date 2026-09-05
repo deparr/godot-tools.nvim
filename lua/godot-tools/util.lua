@@ -24,7 +24,9 @@ end
 ---@param pattern string pattern to match on
 ---@return fun(filepath: string): string?
 function M.extractor(pattern)
-  return function(filepath) return M.extract_from_file(filepath, pattern) end
+  return function(filepath)
+    return M.extract_from_file(filepath, pattern)
+  end
 end
 
 return M

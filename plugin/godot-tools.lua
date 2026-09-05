@@ -68,7 +68,7 @@ local commands = {
     end,
     nargs = 0,
     complete = nil,
-  }
+  },
 }
 
 ---@param ctx gdtools.Command.Context
