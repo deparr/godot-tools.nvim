@@ -13,6 +13,7 @@ function M.scene_file(path, opts)
 
   local render = require "godot-tools.render"
   local lines, hls = render.scene_tree(scene)
+  local max_line_len = vim.iter(lines):fold(0, function(acc, v) return math.max(acc, #v) end)
 
   vim.cmd.vsplit()
   local preview_buf = vim.api.nvim_create_buf(false, true)
@@ -26,10 +27,13 @@ function M.scene_file(path, opts)
   local preview_title = vim.fs.relpath(vim.fn.getcwd(), path) or path
   vim.api.nvim_buf_set_name(preview_buf, "Preview of " .. preview_title)
   vim.api.nvim_win_set_buf(0, preview_buf)
+  vim.api.nvim_win_resize(0, max_line_len + 1, -1, { anchor = "right" })
 
   vim.bo[preview_buf].modifiable = false
   vim.bo[preview_buf].buftype = "nofile"
   vim.bo[preview_buf].swapfile = false
+  vim.bo[preview_buf].bufhidden = "wipe"
+  vim.bo[preview_buf].filetype = "gdtools-scene-tree"
 
   vim.wo[0].number = false
   vim.wo[0].relativenumber = false
