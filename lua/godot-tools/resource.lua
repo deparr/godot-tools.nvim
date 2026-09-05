@@ -1,8 +1,11 @@
 local Parser = require("godot-tools.resource.parser")
+local log = require "godot-tools.log"
+
+local cache = require("godot-tools.resource.cache")
 
 local M = {}
 
----@enum Tag
+---@enum Tag known tags for resource blocks
 local Tag = {
   ROOT_RESOURCE = "gd_resouce",
   ROOT_SCENE = "gd_scene",
@@ -17,6 +20,10 @@ local Tag = {
 ---@param expected_type string? expected type of loaded resource
 ---@return gdtools.Resource
 function M.load(path, expected_type)
+  local cached = cache.get(path)
+  if cached then
+    return cached
+  end
   local f = io.open(path, "r")
   if not f then
     error(("failed to open file: %s"):format(path))
@@ -51,12 +58,12 @@ function M.load_str(source, expected_type)
     elseif block.tag == Tag.RESOURCE then
       res.values = block.values
     else
-      vim.notify(("TODO unexpected block.tag in resource: %s"):format(block.tag))
+      log.warn(("TODO unexpected block.tag in resource: %s"):format(block.tag))
     end
   end
 
   if not found_main_tag then
-    vim.notify("Did not find main tag for resource", vim.log.levels.ERROR)
+    log.error("Did not find main tag for resource")
   end
 
   return res
@@ -65,11 +72,16 @@ end
 ---@param path string path to load from
 ---@return gdtools.Scene
 function M.load_scene(path)
+  local cached = cache.get(path)
+  if cached then
+    return cached
+  end
   local f = io.open(path, "r")
   if not f then
     error(("failed to open file: %s"):format(path))
   end
   local source = f:read("a")
+  f:close()
   return M.load_scene_str(source)
 end
 
@@ -96,7 +108,7 @@ function M.load_scene_str(source)
         path = block.attrs.path,
         id = block.attrs.id,
       }
-      ext_resources[#scene.ext_resources + 1] = ext_res
+      ext_resources[#ext_resources + 1] = ext_res
 
     elseif block.tag == Tag.SUB_RESOURCE then
       local sub_res = {
@@ -104,7 +116,7 @@ function M.load_scene_str(source)
         id = block.attrs.id,
         values = block.values,
       }
-      sub_resources[#scene.sub_resources + 1] = sub_res
+      sub_resources[#sub_resources + 1] = sub_res
 
     elseif block.tag == Tag.NODE then
       local node = {
@@ -115,14 +127,15 @@ function M.load_scene_str(source)
         instance = block.attrs.instance,
         values = block.values,
       }
-      nodes[#scene.nodes + 1] = node
+      nodes[#nodes + 1] = node
+
     else
-      vim.notify(("TODO unexpected block.tag in scene: %s"):format(block.tag))
+      log.warn(("TODO unexpected block.tag in scene: %s"):format(block.tag))
     end
   end
 
   if not found_main_tag then
-    vim.notify("Did not find main tag for scene", vim.log.levels.ERROR)
+    log.error("Did not find main tag for scene")
   end
 
   return scene
