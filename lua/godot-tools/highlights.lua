@@ -9,9 +9,9 @@ M.defs = {
     GDToolsNodeControl = { fg = "#6aff7c", ctermfg = "green", default = true },
     GDToolsNodeAnimation = { fg = "#c55bff", ctermfg = "magenta", default = true },
     GDToolsNodeEditor = { fg = "#ffcb77", ctermfg = "yellow", default = true },
-    GDToolsNodeIndicator = { link = "Normal" },
     GDToolsNodeType = { link = "Comment", default = true },
-    GDToolsSceneTreeNormal = { link = "Normal" },
+    GDToolsNodeIndicator = { link = "Normal", default = true },
+    GDToolsSceneTreeNormal = { link = "Normal", default = true },
     GDToolsSceneTreeRelLine = { link = "WinSeparator", default = true },
   },
   light = {
@@ -22,8 +22,8 @@ M.defs = {
     GDToolsNodeAnimation = { fg = "#a85de9", ctermfg = "magenta", default = true },
     GDToolsNodeEditor = { fg = "#844b0e", ctermfg = "yellow", default = true },
     GDToolsNodeType = { link = "Comment", default = true },
-    GDToolsNodeIndicator = { link = "Normal" },
-    GDToolsSceneTreeNormal = { link = "Normal" },
+    GDToolsNodeIndicator = { link = "Normal", default = true },
+    GDToolsSceneTreeNormal = { link = "Normal", default = true },
     GDToolsSceneTreeRelLine = { link = "WinSeparator", default = true },
   },
 }
