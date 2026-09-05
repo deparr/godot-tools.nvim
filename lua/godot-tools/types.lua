@@ -15,6 +15,10 @@
 ---@field values gdtools.Resource.Value[]
 ---@field sub_resources gdtools.SubResource
 
+---@class gdtools.Resource.Ref
+---@field uid? string # godot uid
+---@field path? string # godot res path
+
 ---@class gdtools.SubResource
 ---@field type string
 ---@field id string

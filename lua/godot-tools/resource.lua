@@ -133,4 +133,20 @@ function M.load_scene_str(source)
   return scene
 end
 
+--- This **does not** convert uid:// 's into res:// paths,
+--- it will throw if given one
+---@param real_path string absolute or relative path to a project resource
+---@return string res_path res:// prefixed path to resource at `real_path`
+function M.path(real_path)
+  real_path = real_path or ""
+  if vim.startswith(real_path, "res://") then
+    return real_path
+  elseif vim.startswith(real_path, "uid://") then
+    error(("%s is already a uid"):format(real_path)) -- error, this is a bug
+  end
+
+  -- todo this hsould use the found project directory instead of cwd()
+  return "res://" .. vim.fs.relpath(vim.fn.getcwd(), vim.fs.normalize(vim.fs.abspath(real_path)))
+end
+
 return M

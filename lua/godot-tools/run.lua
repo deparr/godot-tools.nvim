@@ -7,9 +7,9 @@ local api = vim.api
 
 ---@class gdtools.Run.State
 M.state = {
-  ---@type string?
+  ---@type string? uid of main scene
   main_scene = nil,
-  ---@type string?
+  ---@type gdtools.Resource.Ref
   last_scene = nil,
   ---@type integer
   console_buf = -1,
@@ -19,9 +19,8 @@ M.state = {
 
 local extract_main_uid = require("godot-tools.util").extractor 'run/main_scene.*=.*%"(uid://.*)%"'
 
---- Run the projects main scene
----@param ctx gdtools.Command.Context
-function M.main(ctx)
+--- Run the project's main scene
+function M.main()
   -- todo this sucks, shouldn't copout with regex or ignore changes to the main scene
   if not M.state.main_scene then
     local project_file = vim.fs.joinpath(vim.fn.getcwd(), "project.godot")
@@ -31,31 +30,36 @@ function M.main(ctx)
       return
     end
   end
-  ctx.args = { M.state.main_scene }
-  M.scene(ctx)
+  M.scene({ uid = M.state.main_scene })
 end
 
 --- Run the last scene run with M.scene
----@param ctx gdtools.Command.Context
-function M.last(ctx)
+---@param ref? gdtools.Resource.Ref
+function M.last(ref)
   if not M.state.last_scene then
-    if #ctx.args < 1 then
+    if not ref then
       log.error "no last scene to run!"
       return
     end
-    M.state.last_scene = ctx.args[1]
+    M.state.last_scene = ref
   end
-  ctx.args = { M.state.last_scene }
-  M.scene(ctx)
+  M.scene(M.state.last_scene)
 end
 
 --- Run a specific scene
----@param ctx gdtools.Command.Context
-function M.scene(ctx)
-  if #ctx.args < 1 then
+---@param ref gdtools.Resource.Ref
+function M.scene(ref)
+  if not ref then
     log.error "need a scene to run!"
     return
   end
+
+  local scene_id = ref.uid or ref.path
+  if not scene_id then
+    log.error "ref has no data"
+    return
+  end
+
   -- clean up our old buffer and win
   if api.nvim_buf_is_valid(M.state.console_buf) then
     api.nvim_buf_delete(M.state.console_buf, { force = true })
@@ -71,13 +75,11 @@ function M.scene(ctx)
   end
   api.nvim_win_set_buf(M.state.console_win, M.state.console_buf)
 
-  if ctx.args[1] ~= M.state.main_scene then
-    M.state.last_scene = ctx.args[1]
-  end
+  M.state.last_scene = ref
 
-  vim.bo.filetype = "godot-console"
+  vim.bo.filetype = "gdtools-console"
   api.nvim_set_option_value("scrolloff", 999, { win = M.state.console_win, scope = "local" })
-  vim.fn.jobstart({ config.godot_bin, "--scene", ctx.args[1] }, { term = true })
+  vim.fn.jobstart({ config.godot_bin, "--scene", scene_id }, { term = true })
   vim.cmd "startinsert"
 end
 

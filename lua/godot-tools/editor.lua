@@ -1,13 +1,15 @@
+local config = require("godot-tools").config
 local log = require "godot-tools.log"
 
 local M = {}
 
----@param ctx gdtools.Command.Context
-function M.open(ctx)
-  local file_name_abs = ctx.args[1]
-  local file_name = vim.fn.fnamemodify(file_name_abs, ":p:.")
-  local file_line = math.floor(tonumber(ctx.args[2]) or 1)
-  local file_col = math.floor(tonumber(ctx.args[3]) or 1)
+---@param path string file to open
+---@param line string? line to move to
+---@param col string? col to move to
+function M.open(path, line, col)
+  local file_name = vim.fn.fnamemodify(path, ":p:.")
+  local file_line = math.floor(tonumber(line) or 1)
+  local file_col = math.floor(tonumber(col) or 1)
 
   ---@type integer
   local target_buf
@@ -50,17 +52,17 @@ function M.open(ctx)
   vim.api.nvim_win_set_cursor(target_win, { file_line, file_col })
 end
 
----@param ctx gdtools.Command.Context
-function M.connect(ctx)
-  local remote_addr = ctx.args[1] or "127.0.0.1:6004"
+---@param listen_addr string? address to listen for godot editor calls on
+function M.connect(listen_addr)
+  listen_addr = listen_addr or config.listen_addr
   local connected_servers = vim.fn.serverlist()
-  if vim.list_contains(connected_servers, remote_addr) then
-    log.info("already connected to %s!", remote_addr)
+  if vim.list_contains(connected_servers, listen_addr) then
+    log.info("already connected to %s!", listen_addr)
     return
   end
-  local actual_addr = vim.fn.serverstart(remote_addr)
+  local actual_addr = vim.fn.serverstart(listen_addr)
   if actual_addr then
-    log.info("connected to %s", actual_addr)
+    log.info("connected to %s", listen_addr)
   end
 end
 

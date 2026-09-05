@@ -19,21 +19,25 @@ end
 local commands = {
   connect = {
     fn = function(ctx)
-      require("godot-tools.editor").connect(ctx)
+      require("godot-tools.editor").connect(ctx.args[1])
     end,
     nargs = 0,
     complete = nil,
   },
   open = {
     fn = function(ctx)
-      require("godot-tools.editor").open(ctx)
+      if #ctx.args < 1 then
+        return
+      end
+      local path, line, col = ctx.args[1], ctx.args[2], ctx.args[3]
+      require("godot-tools.editor").open(path, line, col)
     end,
     nargs = 1,
     complete = nil,
   },
   main = {
-    fn = function(ctx)
-      require("godot-tools.run").main(ctx)
+    fn = function(_ctx)
+      require("godot-tools.run").main()
     end,
     nargs = 0,
     complete = nil,
@@ -42,16 +46,16 @@ local commands = {
     fn = function(ctx)
       if #ctx.args < 1 and not ctx.bang then
         -- todo this should be a generic 'find' module
-        require("godot-tools.telescope").find_tscn(function(uid)
-          ctx.args = { uid }
-          require("godot-tools.run").scene(ctx)
-        end, { rich_preview = true })
+        require("godot-tools.telescope").find_tscn(require("godot-tools.run").scene, { rich_preview = true })
         return
       end
       if ctx.bang then
-        require("godot-tools.run").last(ctx)
+        require("godot-tools.run").last()
       else
-        require("godot-tools.run").scene(ctx)
+        local arg = ctx.args[1] or ""
+        local ref = vim.startswith(arg, "uid://") and { uid = arg }
+          or { path = require("godot-tools.resource").path(arg) }
+        require("godot-tools.run").scene(ref)
       end
     end,
     nargs = 0,

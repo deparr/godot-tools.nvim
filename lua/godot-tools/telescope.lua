@@ -14,7 +14,7 @@ local default_findtscn_opts = {
   ---@type boolean?
   rich_preview = false,
   ---@type table?
-  preview_opts = {}
+  preview_opts = {},
 }
 
 --- requires `fd` to be installed
@@ -40,9 +40,9 @@ function M.find_tscn(callback, opts, ts_opts)
           actions.close(prompt_bufnr)
           local res = require "godot-tools.resource"
           local entry = action_state.get_selected_entry()
-          -- this will always be cached on rich previews
-          local uid = res.load_scene(entry.path).uid
-          callback(uid, entry.path)
+          -- rich previews ensure the scene is in cache
+          local ref = opts.rich_preview and { uid = res.load_scene(entry.path).uid } or { path = res.path(entry.path) }
+          callback(ref)
         end)
         return true
       end,
