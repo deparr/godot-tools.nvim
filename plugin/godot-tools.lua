@@ -42,7 +42,7 @@ local commands = {
     fn = function(ctx)
       if #ctx.args < 1 and not ctx.bang then
         -- todo this should be a generic 'find' module
-        require("godot-tools.telescope").pick_tscn(nil, function(uid)
+        require("godot-tools.telescope").find_tscn(nil, function(uid)
           ctx.args = { uid }
           require("godot-tools.run").scene(ctx)
         end)
@@ -57,6 +57,18 @@ local commands = {
     nargs = 0,
     complete = nil,
   },
+  preview = {
+    fn = function(ctx)
+      local path = ctx.args[1]
+      if path then
+        require("godot-tools.preview").scene_file(path)
+      else
+        require("godot-tools.preview").scene_buffer()
+      end
+    end,
+    nargs = 0,
+    complete = nil,
+  }
 }
 
 ---@param ctx gdtools.Command.Context
