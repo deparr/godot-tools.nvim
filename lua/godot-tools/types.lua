@@ -31,7 +31,7 @@
 ---@field format integer
 ---@field ext_resources gdtools.ExtResource[]
 ---@field sub_resources gdtools.SubResource[]
----@field nodes gdtools.Node
+---@field nodes gdtools.Node[]
 
 ---@class gdtools.Node
 ---@field name string
@@ -42,4 +42,4 @@
 ---@field values gdtools.Resource.Value[]
 
 ---@alias gdtools.Resource.Value table<string, gdtools.Variant>
----@alias gdtools.Variant number|string|boolean|{call_expr: string}|{string_name: string}
+---@alias gdtools.Variant number|string|boolean|{call_expr: string}|{stringname: string}

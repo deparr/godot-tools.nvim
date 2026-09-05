@@ -194,12 +194,16 @@ function Parser:take_block_attrs()
 end
 
 --todo better 'call_expr'
---todo handle string names &""
 ---@return gdtools.Variant
 function Parser:take_variant(allowed_num_chars)
   local cur = self:at()
 
-  if cur == '"' then
+  if (cur == "&" and self:peek() == '"') or cur == '"' then
+    local is_stringname = false
+    if cur == "&" then
+      is_stringname = true
+      self:advance()
+    end
     self:advance()
     local start = self.pos
     cur = self:at()
@@ -217,7 +221,7 @@ function Parser:take_variant(allowed_num_chars)
     end
     local str_value = self.src:sub(start, self.pos - 1)
     self:advance()
-    return str_value
+    return is_stringname and { stringname = str_value } or str_value
 
   elseif cur:match(Parser.pat_attr_num_start) then
     local raw = self:take_while_any(allowed_num_chars)
