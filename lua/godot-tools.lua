@@ -3,7 +3,7 @@ local M = {}
 ---@class gdtools.Config
 M.config = {
   ---@type string path to godot binary
-  godot_bin = (vim.uv.os_uname().sysname:match ".*[wW]indows.*" ~= nil) and "godot_console" or "godot",
+  godot_bin = (vim.fn.has("win32") == 1) and "godot_console" or "godot",
   ---@type boolean whether we should auto start the server
   auto_connect = true,
   ---@type string where we should listen for remote events, can be a ip addr or named pipe
