@@ -5,6 +5,7 @@ function M.tscn_previewer(opts)
   local render = require "godot-tools.render"
   local previewers = require "telescope.previewers"
   local cache = {}
+  opts = opts or {}
 
   return previewers.new_buffer_previewer({
     title = "Scene Tree",
@@ -13,7 +14,7 @@ function M.tscn_previewer(opts)
       if not cache[path] then
         local resource = require "godot-tools.resource"
         local scene = resource.load_scene(path)
-        local lines, hl_spans = render.scene_tree(scene, opts)
+        local lines, hl_spans = render.scene_tree(scene, opts.render)
         cache[path] = { rendered = lines, hl_spans = hl_spans }
       end
 

@@ -42,10 +42,10 @@ local commands = {
     fn = function(ctx)
       if #ctx.args < 1 and not ctx.bang then
         -- todo this should be a generic 'find' module
-        require("godot-tools.telescope").find_tscn(nil, function(uid)
+        require("godot-tools.telescope").find_tscn(function(uid)
           ctx.args = { uid }
           require("godot-tools.run").scene(ctx)
-        end)
+        end, { rich_preview = true })
         return
       end
       if ctx.bang then
@@ -59,6 +59,13 @@ local commands = {
   },
   preview = {
     fn = function(ctx)
+      if ctx.bang then
+        require("godot-tools.telescope").find_tscn(function(_, path)
+          vim.cmd.edit(path)
+          require("godot-tools.preview").scene_file(path)
+        end)
+        return
+      end
       local path = ctx.args[1]
       if path then
         require("godot-tools.preview").scene_file(path)
