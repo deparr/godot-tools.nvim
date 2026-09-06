@@ -63,14 +63,16 @@ local commands = {
   },
   preview = {
     fn = function(ctx)
+      local path = ctx.args[1]
       if ctx.bang then
-        require("godot-tools.telescope").find_tscn(function(_, path)
-          vim.cmd.edit(path)
-          require("godot-tools.preview").scene_file(path)
-        end)
+        require("godot-tools.telescope").find_tscn(function(ref)
+          local selection = ref.path or error "this is gonna be annoying to fix 😜"
+          selection = selection:sub(#"res://" + 1)
+          vim.cmd.edit(selection)
+          require("godot-tools.preview").scene_file(selection)
+        end, nil, { default_text = path and path or nil })
         return
       end
-      local path = ctx.args[1]
       if path then
         require("godot-tools.preview").scene_file(path)
       else
