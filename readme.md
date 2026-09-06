@@ -8,7 +8,7 @@
 > unfinished**
 
 
-If all you want is a decent Godot external editor experience do the following:
+Though if all you need is a decent Godot external editor experience you can do the following:
 
 1. install this plugin:
 ```lua
