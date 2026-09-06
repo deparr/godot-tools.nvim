@@ -1,36 +1,49 @@
 # godot-tools.nvim
 
-These used to live in my personal config, but I decided they'd be easier
-to manage as a separate plugin. 
+> [!IMPORTANT]
+> These used to live in my personal config, but I decided they'd be easier
+> to manage as a separate plugin. 
+>
+> As such this plugin should be considered **extremely jank and 
+> unfinished**
 
-**You will probably need nvim nightly to use these.** Also I made these for me,
-you might not even want to.
 
+If all you want is a decent Godot external editor experience do the following:
 
-The most useful tool is probably `require("godot-tools.editor").open()`
-which checks to see if a script is already in an open window before opening a new one.
-
-To use it, have nvim listen on some local port (see `connect()` in `lua/godot-tools/editor.lua` and `:h serverstart`)
-and set the following godot editor settings:
-
-```ini
-text_editor/external/exec_path = "your/path/to/nvim"
-text_editor/external/exec_flags = "--server 127.0.0.1:6004 --remote-send "<esc>:Godot open {file} {line} {col}<cr>""
-```
-
-### non-goals
-
-Things I probably won't add, because I don't need/use them
-
-- nvim-dap / other debugging support
-- lsp configuration
-    - literally just use:
-
+1. install this plugin:
 ```lua
-return {
-    cmd = vim.lsp.rpc.connect("127.0.0.1", 6005),
-    filetypes = { "gdscript" },
-    root_markers = { "project.godot" },
-}
+-- lazy.nvim
+return { "deparr/godot-tools.nvim" }
+
+-- vim.pack
+vim.pack.add({ "https://github.com/deparr/godot-tools.nvim" })
+```
+2. In Godot, go to `Editor Settings > Text Editor > External` and set:
+    - exec_path to your nvim path
+    - exec_flags to `--server 127.0.0.1:6004 --remote-send "<ESC><C-\><C-N>:Godot open {file} {line} {col}<CR>"`
+    - use_external to true
+
+3. And enjoy a moderately decent editor experience when opening scripts:
+    - scripts will always open in new window, preserving what you had
+      open before
+    - if a script is already open, it will be focused instead of opening
+      a new window
+    - scripts will still open while in terminal/insert/visual mode
+
+4. Unrelated to the plugin, but while you're in Godot settings, go ahead and disable
+    `Network > Language Server > Smart Resolve`, it only makes the lsp worse
+
+
+
+The majority of useful things are accessible through the user command:
+```vim
+:Godot
 ```
 
+and everything is available in lua:
+```lua
+require("godot-tools.editor")
+require("godot-tools.run")
+require("godot-tools.render")
+require("godot-tools.preview")
+```
