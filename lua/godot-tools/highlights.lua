@@ -23,7 +23,7 @@ M.defs = {
     GDToolsNodeIndicator = { link = "Normal", default = true },
     GDToolsSceneTreeNormal = { link = "Normal", default = true },
     GDToolsSceneTreeRelLine = { link = "WinSeparator", default = true },
-  }
+  },
 }
 
 ---@type table<string, string>?

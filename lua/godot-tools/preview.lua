@@ -13,7 +13,9 @@ function M.scene_file(path, opts)
 
   local render = require "godot-tools.render"
   local lines, hls = render.scene_tree(scene)
-  local max_line_len = vim.iter(lines):fold(0, function(acc, v) return math.max(acc, #v) end)
+  local max_line_len = vim.iter(lines):fold(0, function(acc, v)
+    return math.max(acc, #v)
+  end)
 
   vim.cmd.vsplit()
   local preview_buf = vim.api.nvim_create_buf(false, true)

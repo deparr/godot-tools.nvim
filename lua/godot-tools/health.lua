@@ -27,7 +27,7 @@ end
 function M.check()
   vim.health.start "godot-tools"
 
-  local config = require("godot-tools.config")
+  local config = require "godot-tools.config"
   if vim.fn.executable(config.godot_bin) == 0 then
     vim.health.warn(("'%s' is not executable, godot-tools.run commands will fail"):format(config.godot_bin))
   else
@@ -40,9 +40,9 @@ function M.check()
     addr_is_valid = check_ip(listen_addr)
   end
   if not addr_is_valid then
-    vim.health.warn(("'%s' is not a valid ip4 address. will be unable to connect to Godot"):format(listen_addr)
+    vim.health.warn(("'%s' is not a valid ip4 address. will be unable to connect to Godot"):format(listen_addr))
   else
-    vim.health.ok(("'%s' is a valid listen address"):format(listen_addr)
+    vim.health.ok(("'%s' is a valid listen address"):format(listen_addr))
   end
 end
 
