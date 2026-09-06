@@ -1,6 +1,6 @@
 local M = {}
 
----@type table<"light"|"dark", table<string, vim.api.keyset.set_hl_info>>
+---@type table<"light"|"dark"|"common", table<string, vim.api.keyset.set_hl_info>>
 M.defs = {
   dark = {
     GDToolsNode = { fg = "#e0e0e0", ctermfg = "white", default = true },
@@ -9,10 +9,6 @@ M.defs = {
     GDToolsNodeControl = { fg = "#6aff7c", ctermfg = "green", default = true },
     GDToolsNodeAnimation = { fg = "#c55bff", ctermfg = "magenta", default = true },
     GDToolsNodeEditor = { fg = "#ffcb77", ctermfg = "yellow", default = true },
-    GDToolsNodeType = { link = "Comment", default = true },
-    GDToolsNodeIndicator = { link = "Normal", default = true },
-    GDToolsSceneTreeNormal = { link = "Normal", default = true },
-    GDToolsSceneTreeRelLine = { link = "WinSeparator", default = true },
   },
   light = {
     GDToolsNode = { fg = "#5a5a5a", ctermfg = "black", default = true },
@@ -21,11 +17,13 @@ M.defs = {
     GDToolsNodeControl = { fg = "#2fa139", ctermfg = "green", default = true },
     GDToolsNodeAnimation = { fg = "#a85de9", ctermfg = "magenta", default = true },
     GDToolsNodeEditor = { fg = "#844b0e", ctermfg = "yellow", default = true },
+  },
+  common = {
     GDToolsNodeType = { link = "Comment", default = true },
     GDToolsNodeIndicator = { link = "Normal", default = true },
     GDToolsSceneTreeNormal = { link = "Normal", default = true },
     GDToolsSceneTreeRelLine = { link = "WinSeparator", default = true },
-  },
+  }
 }
 
 ---@type table<string, string>?
@@ -43,6 +41,9 @@ end
 function M.setup_highlights()
   local hls = M.defs[vim.o.bg]
   for group, def in pairs(hls) do
+    vim.api.nvim_set_hl(0, group, def)
+  end
+  for group, def in pairs(M.defs.common) do
     vim.api.nvim_set_hl(0, group, def)
   end
 end

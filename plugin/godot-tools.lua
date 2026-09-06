@@ -74,6 +74,11 @@ local commands = {
         return
       end
       if path then
+        if vim.fs.ext(path) ~= "tscn" then
+          require("godot-tools.log").error("can't preview non tscn file: %s", path)
+          return
+        end
+        vim.cmd.edit(path)
         require("godot-tools.preview").scene_file(path)
       else
         require("godot-tools.preview").scene_buffer()

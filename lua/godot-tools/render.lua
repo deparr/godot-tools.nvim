@@ -33,7 +33,7 @@ end
 ---@class gdtools.Render.opts
 local default_render_opts = {
   max_depth = 2,
-  show_type = "diff",
+  show_type = "auto",
   show_indicators = true,
 }
 
@@ -42,7 +42,7 @@ local default_render_opts = {
 ---@param type string node type
 ---@return boolean
 function should_render_type(opts, name, type)
-  return opts.show_type == "always" or (opts.show_type == "diff" and name ~= type)
+  return opts.show_type == "always" or (opts.show_type == "auto" and name ~= type)
 end
 
 ---@param node gdtools.Node
