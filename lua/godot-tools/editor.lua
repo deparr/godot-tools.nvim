@@ -1,4 +1,4 @@
-local config = require("godot-tools").config
+local config = require "godot-tools.config"
 local log = require "godot-tools.log"
 
 local M = {}
@@ -54,7 +54,7 @@ end
 
 ---@param listen_addr string? address to listen for godot editor calls on
 function M.connect(listen_addr)
-  listen_addr = listen_addr or config.listen_addr
+  listen_addr = listen_addr or config.editor.listen_addr
   local connected_servers = vim.fn.serverlist()
   if vim.list_contains(connected_servers, listen_addr) then
     log.info("already connected to %s!", listen_addr)

@@ -1,6 +1,6 @@
 local M = {}
 
-local config = require("godot-tools").config
+local config = require "godot-tools.config"
 local log = require "godot-tools.log"
 
 local api = vim.api
