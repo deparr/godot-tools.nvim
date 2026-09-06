@@ -1,4 +1,4 @@
-*godot-tools.txt*			 Utilities for using Neovim with Godot
+*godot-tools.txt*                        Utilities for using Neovim with Godot
 *gd-tools* *godot-tools*
 ------------------------------------------------------------------------------
 INTRODUCTION                                                 *godot-tools-intro*
@@ -48,27 +48,27 @@ NOTE: You do not need to call `setup` to use the default config.
 
 >lua
     require("godot-tools").setup({
-	godot_bin = (vim.fn.has("win32") == 1) and "godot_console" or "godot",
-	editor = {
-	    auto_connect = true,
-	    listen_addr = "127.0.0.1:6004",
-	},
+        godot_bin = (vim.fn.has("win32") == 1) and "godot_console" or "godot",
+        editor = {
+            auto_connect = true,
+            listen_addr = "127.0.0.1:6004",
+        },
     })
 <
 
 ------------------------------------------------------------------------------
-COMMANDS					 *:Godot* *godot-tools-commands*
+COMMANDS                                         *:Godot* *godot-tools-commands*
 
 godot-tools defines a single user command, `:Godot`. All invocations must
 include one of the sub-commands listed below:
 
-								   *:Godot_main*
+                                                                   *:Godot_main*
 >vim
     :Godot main
 <
 Runs the project's main scene. Equivalent to |godot-tools-run.main|.
 
-								  *:Godot_scene*
+                                                                  *:Godot_scene*
 >vim
     :Godot scene
 <
@@ -88,7 +88,7 @@ Equivalent to |godot-tools-run.scene|.
 With bang, `scene` reruns the previously run scene.
 Equivalent to |godot-tools-run.last|
 
-								*:Godot_preview*
+                                                                *:Godot_preview*
 >vim
     :Godot preview
 <
@@ -108,14 +108,14 @@ Opens a picker of `tscn` files and renders the selected file
 in a vertical split.
 If given, {query} is passed to the picker as an initial filter.
 
-								*:Godot_connect*
+                                                                *:Godot_connect*
 >vim
     :Godot connect {addr}
 <
 Starts listening for remote events on {addr}.
 Equivalent to |godot-tools-editor.connect|.
 
-								   *:Godot_open*
+                                                                   *:Godot_open*
 >vim
     :Godot open {path} {line} {col}
 <
@@ -128,7 +128,7 @@ EDITOR                                                      *godot-tools-editor*
 
 The editor module provides tools for interfacing with the Godot editor.
 
-open({path}, {line}, {col})			       *godot-tools-editor.open*
+open({path}, {line}, {col})                            *godot-tools-editor.open*
     Edits a file, opening a new window.
 
     If the file is already open, focus its window instead.
@@ -137,17 +137,17 @@ open({path}, {line}, {col})			       *godot-tools-editor.open*
     by the Godot editor when opening scripts.
 
     Parameters: ~
-      • {path}	(`string`) file to open
-      • {line}	(`integer?`) line to position cursor on, default 1
-      • {col}	(`integer?`) col to position cursor on, default 1
+      • {path}  (`string`) file to open
+      • {line}  (`integer?`) line to position cursor on, default 1
+      • {col}   (`integer?`) col to position cursor on, default 1
 
 
-connect({addr})					    *godot-tools-editor.connect*
+connect({addr})                                     *godot-tools-editor.connect*
     Starts a server at {addr}. See |serverstart()|.
 
     Parameters: ~
-      • {addr}	(`string?`) ip4 address or named pipe.
-			    default `config.editor.listen_addr`
+      • {addr}  (`string?`) ip4 address or named pipe.
+                            default `config.editor.listen_addr`
 
 ------------------------------------------------------------------------------
 RUN                                                            *godot-tools-run*
@@ -156,59 +156,59 @@ The run module provides tools for running your project and capturing its
 console output.
 
 
-main()							  *godot-tools-run.main*
+main()                                                    *godot-tools-run.main*
     Runs a project's main scene, as defined in `project.godot`.
 
     Equivalent to `:Godot main`.
 
     See |godot-tools-run.scene| for more detail on running scenes.
 
-last()							  *godot-tools-run.last*
+last()                                                    *godot-tools-run.last*
     Reruns the previously run scene.
 
     Equivalent to `:Godot! scene`
 
     See |godot-tools-run.scene| for more detail on running scenes.
 
-scene({ref})						 *godot-tools-run.scene*
+scene({ref})                                             *godot-tools-run.scene*
     Run the scene specifed by `ref`
 
     Equivalent to `:Godot scene`
 
     Parameters: ~
-      • {ref}	(`gdtools.Ref`) scene to run. prefers uid if both uid and path
-				are set on {ref}
+      • {ref}  (`gdtools.Ref`) scene to run. prefers uid if both uid and path
+                                are set on {ref}
 
     Examples: ~
 >vim
-	:Godot scene scenes/preview_test.tscn
+    :Godot scene scenes/preview_test.tscn
 <>lua
-	require("godot-tools.run").scene({uid = "uid://cbxqe5hrgubmo"})
-	require("godot-tools.run").scene({path = "res://scenes/preview_test.tscn"})
+    require("godot-tools.run").scene({uid = "uid://cbxqe5hrgubmo"})
+    require("godot-tools.run").scene({path = "res://scenes/preview_test.tscn"})
 <
 
-toggle_console()				*godot-tools-run.toggle_console*
+toggle_console()                                *godot-tools-run.toggle_console*
     Toggle visibility of the godot-tools console window.
 
 
 ------------------------------------------------------------------------------
-RENDER							    *godot-tools-render*
+RENDER                                                      *godot-tools-render*
 
 The render module provides tools for rendering TUI visuals
 of Godot scenes and resources.
 
-						 *godot-tools-render.scene_tree*
+                                                 *godot-tools-render.scene_tree*
 scene_tree({scene}, {opts}): string[], gdtools.HLSpan[]
     Render {scene}'s node hierarchy, similar to Godot's SceneTree dock.
 
     Parameters: ~
-      • {scene}	(`gdtools.Scene`) scene data
-      • {opts}	(`gdtools.Render.opts?`) render options
-		accepts the following keys:
-		• max_depth: integer
-		• show_type: "never"|"always"|"auto"
-		• show_indicators: boolean
-    
+      • {scene} (`gdtools.Scene`) scene data
+      • {opts}  (`gdtools.Render.opts?`) render options
+                accepts the following keys:
+                 • max_depth: integer
+                 • show_type: "never"|"always"|"auto"
+                 • show_indicators: boolean
+
     Return: ~
       • `string[]` rendered lines
       • `gdtools.HLSpan[]` highlight regions
@@ -219,7 +219,7 @@ GODOT SETUP                                            *godot-tools-godot-setup*
 To get the best editing experience you also need to configure settings on the
 Godot side.
 
-TEXT EDITOR					   *godot-tools-external-editor*
+TEXT EDITOR                                        *godot-tools-external-editor*
 
 Example external text editor settings:
 >gdresource
@@ -261,7 +261,7 @@ so Godot automatically reloads script and shader changes when you tab back into
 the editor.
 
 
-LSP							       *godot-tools-lsp*
+LSP                                                            *godot-tools-lsp*
 
 godot-tools does not modify or add to your lsp configurations.
 
@@ -292,35 +292,36 @@ and incorrect hover responses.
 ------------------------------------------------------------------------------
 HIGHLIGHTS                                              *godot-tools-highlights*
 
-GDToolsNode							*hl-GDToolsNode*
+GDToolsNode                                                     *hl-GDToolsNode*
     Nodes inheriting from `Node`
 
-GDToolsNode2D						      *hl-GDToolsNode2D*
+GDToolsNode2D                                                 *hl-GDToolsNode2D*
     Nodes inheriting from `Node2D`
 
-GDToolsNode3D						      *hl-GDToolsNode3D*
+GDToolsNode3D                                                 *hl-GDToolsNode3D*
     Nodes inheriting from `Node3D`
 
-GDToolsNodeControl					 *hl-GDToolsNodeControl*
+GDToolsNodeControl                                       *hl-GDToolsNodeControl*
     Nodes inheriting from `Control`
 
-GDToolsNodeAnimation				       *hl-GDToolsNodeAnimation*
+GDToolsNodeAnimation                                   *hl-GDToolsNodeAnimation*
     Nodes inheriting from `AnimationMixer`
 
-GDToolsNodeEditor					  *hl-GDToolsNodeEditor*
+GDToolsNodeEditor                                         *hl-GDToolsNodeEditor*
     Editor related nodes such as `EditorDock`
 
-GDToolsNodeType						    *hl-GDToolsNodeType*
+GDToolsNodeType                                             *hl-GDToolsNodeType*
     Node types in the scene tree preview window
 
-GDToolsNodeIndicator				       *hl-GDToolsNodeIndicator*
+GDToolsNodeIndicator                                   *hl-GDToolsNodeIndicator*
     Node indicators in the scene tree preview window
     (attached script, unique name, etc.)
 
-GDToolsSceneTreeNormal				     *hl-GDToolsSceneTreeNormal*
+GDToolsSceneTreeNormal                               *hl-GDToolsSceneTreeNormal*
     Normal text in the scene tree preview window
 
-GDToolsSceneTreeRelLine				    *hl-GDToolsSceneTreeRelLine*
+GDToolsSceneTreeRelLine                             *hl-GDToolsSceneTreeRelLine*
     Node relationship lines in the scene tree preview window
 
-vim:tw=78:ts=8:expandtab:noet:ft=help:norl:
+------------------------------------------------------------------------------
+vim:tw=78:ts=8:ft=help:norl:
