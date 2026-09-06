@@ -21,7 +21,7 @@ In `Editor Settings > Text` `Editor > External` set the following:
 
 >
     Exec Path:      path/to/your/nvim
-    Exec Flags:     --server 127.0.0.1:6004 --remote-send "<esc><c-\\><c-n>:Godot open {file} {line} {col}<cr>"
+    Exec Flags:     --server 127.0.0.1:6004 --remote-send "<esc><c-\><c-n>:Godot open {file} {line} {col}<cr>"
     Use External:   true
 <
 
@@ -29,14 +29,14 @@ This tells Godot to use `nvim` to send an edit command to your main `nvim`
 instance instead of creating a new one every time you open a script.
 
 `127.0.0.1:6004` is godot-tools' default listen address, see
-|godot-tools-config| for configuration details. `{line}` and `{col}`
-are optional.
+|godot-tools-config| for configuration details.
 
 NOTE: You may need to enable "Advanced Settings" to access these options in
 the editor GUI.
 
 You will likely also want to enable `Editor Settings > Text Editor > Behavior`
-`> Auto Reload Scripts on External Change`
+`> Auto Reload Scripts on External Change`, see |godot-tools-godot-setup|
+for more.
 
 See Godot docs for more info on external editors:
 https://docs.godotengine.org/en/stable/tutorials/editor/external_editor.html
@@ -62,13 +62,13 @@ COMMANDS					 *:Godot* *godot-tools-commands*
 godot-tools defines a single user command, `:Godot`. All invocations must
 include one of the sub-commands listed below:
 
-							     *godot-tools-:main*
+								   *:Godot_main*
 >vim
     :Godot main
 <
 Runs the project's main scene. Equivalent to |godot-tools-run.main|.
 
-							    *godot-tools-:scene*
+								  *:Godot_scene*
 >vim
     :Godot scene
 <
@@ -88,7 +88,7 @@ Equivalent to |godot-tools-run.scene|.
 With bang, `scene` reruns the previously run scene.
 Equivalent to |godot-tools-run.last|
 
-							  *godot-tools-:preview*
+								*:Godot_preview*
 >vim
     :Godot preview
 <
@@ -108,19 +108,19 @@ Opens a picker of `tscn` files and renders the selected file
 in a vertical split.
 If given, {query} is passed to the picker as an initial filter.
 
-							  *godot-tools-:connect*
+								*:Godot_connect*
 >vim
     :Godot connect {addr}
 <
 Starts listening for remote events on {addr}.
 Equivalent to |godot-tools-editor.connect|.
 
-							     *godot-tools-:open*
+								   *:Godot_open*
 >vim
     :Godot open {path} {line} {col}
 <
 Intended to be called by the Godot editor, not by users.
-See |godot-tools-godot-setep|.
+See |godot-tools-godot-setup|.
 Equivalent to |godot-tools-editor.open|.
 
 ------------------------------------------------------------------------------
@@ -212,6 +212,82 @@ scene_tree({scene}, {opts}): string[], gdtools.HLSpan[]
     Return: ~
       • `string[]` rendered lines
       • `gdtools.HLSpan[]` highlight regions
+
+------------------------------------------------------------------------------
+GODOT SETUP                                            *godot-tools-godot-setup*
+
+To get the best editing experience you also need to configure settings on the
+Godot side.
+
+TEXT EDITOR					   *godot-tools-external-editor*
+
+Example external text editor settings:
+>gdresource
+    ; if using editor GUI go to: Editor Settings > Text Editor > External
+
+    ; use an external script editor instead of the builtin one
+    text_editor/external/use_external_editor = true
+
+    ; path to nvim
+    ; set to "nvim" to look it up in $PATH
+    text_editor/external/exec_path = "~/.local/bin/nvim"
+
+    ; cli args for nvim
+    text_editor/external/exec_flags = "--server 127.0.0.1:6004 --remote-send \"<esc><c-\\><c-n>:Godot open {file} {line} {col}<cr>\""
+
+    ; same as above but without the extra escapes, suitable for copy pasting in the editor GUI:
+    --server 127.0.0.1:6004 --remote-send "<esc><c-\><c-n>:Godot open {file} {line} {col}<cr>"
+<
+
+Let's break down those exec flags:
+
+`--server 127.0.0.1:6004` tells nvim to use this address for rpc operations
+
+`--remote-send {keys}` sends the input stream {keys} to our rpc target
+
+`'<esc><c-\><c-n>:Godot open {file} {line} {col}<cr>'` is our payload
+    <ESC> leaves insert mode, if active
+    <CTRL-BACKSLASH><CTRL-N> leaves terminal mode, if active
+    :Godot open ...<CR> runs our open command
+
+    {file} {line} {col} are placeholders expanded by Godot for the script we
+    want to open
+
+With those set, opening a script from the filesystem or scene tree dock should
+open the script in Neovim instead of the Godot script editor!
+
+You also probably want to enable `text_editor/behavior/files/auto_reload_scripts_on_external_change`
+so Godot automatically reloads script and shader changes when you tab back into
+the editor.
+
+
+LSP							       *godot-tools-lsp*
+
+godot-tools does not modify or add to your lsp configurations.
+
+Though if you need one, here's a simple gdscript lsp config:
+>lua
+    return {
+      -- this is the default host + port, see Editor Settings > Network > Language Server
+      cmd = vim.lsp.rpc.connect("127.0.0.1", 6005),
+      filetypes = { "gdscript" },
+      root_markers = { "project.godot" },
+    }
+<
+
+See |lsp-new-config| if you don't know where to put this.
+
+This is a very simple config and does not handle multiple Godot clients. You
+might see "The Godot LSP only works correctly for the project open in
+the editor" error messages if you have multiple projects open in Neovim at
+once.
+
+On the Godot side, you definitely want to make sure Smart Resolve is DISABLED
+if you use type hints in your gdscript code (which, you should be).
+
+The Godot lsp is already not the greatest, and Smart Resolve makes it so
+much worse. Turning off Smart Resolve gets rid of the bad type suggestions
+and incorrect hover responses.
 
 ------------------------------------------------------------------------------
 HIGHLIGHTS                                              *godot-tools-highlights*
