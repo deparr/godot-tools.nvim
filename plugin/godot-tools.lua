@@ -1,4 +1,7 @@
 if vim.fn.exists ":Godot" == 2 then
+  vim.schedule(function()
+    vim.notify "would redefine :Godot"
+  end)
 end
 
 ---@param cmd_line string
@@ -133,4 +136,23 @@ end, {
       end)
       :totable()
   end,
+  desc = "godot-tools.nvim command interface",
 })
+
+do
+  local function post_startup()
+    if require("godot-tools.config").editor.auto_connect then
+      require("godot-tools.editor").connect()
+    end
+  end
+
+  if not vim.v.vim_did_enter then
+    vim.api.nvim_create_autocmd("VimEnter", {
+      callback = post_startup,
+      once = true,
+      desc = "godot-tools.nvim post startup",
+    })
+  else
+    post_startup()
+  end
+end
