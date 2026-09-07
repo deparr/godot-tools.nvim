@@ -2,17 +2,30 @@ if vim.fn.exists ":Godot" == 2 then
 end
 
 ---@param cmd_line string
----@return string cmd_name, string[] args
+---@return string cmd_name, string[] args, boolean bang
 local function parse(cmd_line)
   local split = vim.split(vim.trim(cmd_line), "%s+")
-  -- for completions
+  local bang = false
   if vim.startswith(cmd_line, "Godot") then
-    table.remove(split, 1)
+    local godot = table.remove(split, 1)
+    bang = godot:sub(-1) == "!"
   end
+  -- for completions
   if cmd_line:sub(-1) == " " then
     split[#split + 1] = ""
   end
-  return table.remove(split, 1) or "", split
+  return table.remove(split, 1) or "", split, bang
+end
+
+---@param lead string
+---@return string[]
+local function scene_complete(lead)
+  return vim
+    .iter(vim.fn.getcompletion(lead, "file"))
+    :filter(function(x)
+      return x:match ".%/$" or x:match "%.tscn$"
+    end)
+    :totable()
 end
 
 ---@type table<string, gdtools.Command>
@@ -22,25 +35,19 @@ local commands = {
       require("godot-tools.editor").connect(ctx.args[1])
     end,
     nargs = 0,
-    complete = nil,
   },
   open = {
     fn = function(ctx)
-      if #ctx.args < 1 then
-        return
-      end
       local path, line, col = ctx.args[1], ctx.args[2], ctx.args[3]
       require("godot-tools.editor").open(path, line, col)
     end,
     nargs = 1,
-    complete = nil,
   },
   main = {
     fn = function(_ctx)
       require("godot-tools.run").main()
     end,
     nargs = 0,
-    complete = nil,
   },
   scene = {
     fn = function(ctx)
@@ -59,7 +66,9 @@ local commands = {
       end
     end,
     nargs = 0,
-    complete = nil,
+    complete = function(args, bang)
+      return bang and nil or scene_complete(args[#args])
+    end,
   },
   preview = {
     fn = function(ctx)
@@ -85,44 +94,36 @@ local commands = {
       end
     end,
     nargs = 0,
-    complete = nil,
+    complete = function(args, bang)
+      return bang and nil or scene_complete(args[#args])
+    end,
   },
 }
 
----@param ctx gdtools.Command.Context
-local function run_command(ctx)
-  local log = require "godot-tools.log"
-  local cmd = commands[ctx.cmd]
-  if cmd == nil then
-    log.error("command '%s' does not exist", ctx.cmd)
-    return
-  end
-  if #ctx.args < cmd.nargs then
-    log.error("'%s': expected at least %d args, got %d", ctx.cmd, cmd.nargs, #ctx.args)
-    return
-  end
-  cmd.fn(ctx)
-end
-
 vim.api.nvim_create_user_command("Godot", function(ctx)
-  local cmd, args = parse(ctx.args)
-  local sub_ctx = {
-    cmd = cmd,
-    args = args,
-    bang = ctx.bang,
-  }
-  run_command(sub_ctx)
+  local cmd_name, args = parse(ctx.args)
+  local log = require "godot-tools.log"
+  local cmd = commands[cmd_name]
+  if cmd == nil then
+    log.error("command '%s' does not exist", cmd_name)
+    return
+  end
+  if #args < cmd.nargs then
+    log.error("'%s': expected at least %d args, got %d", cmd_name, cmd.nargs, #args)
+    return
+  end
+  cmd.fn({ cmd = cmd_name, args = args, bang = ctx.bang })
 end, {
   nargs = "+",
   bang = true,
   complete = function(_, line)
-    local cmd, args = parse(line)
+    local cmd, args, bang = parse(line)
     if #args > 0 then
       local cmd_info = commands[cmd]
       if not cmd_info or not cmd_info.complete then
         return {}
       end
-      return cmd_info.complete(args)
+      return type(cmd_info.complete) == "function" and cmd_info.complete(args, bang) or cmd_info.complete
     end
 
     return vim
