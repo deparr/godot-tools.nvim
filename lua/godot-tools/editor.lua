@@ -55,15 +55,24 @@ end
 ---@param listen_addr string? address to listen for godot editor calls on
 function M.connect(listen_addr)
   listen_addr = listen_addr or config.editor.listen_addr
-  local connected_servers = vim.fn.serverlist()
-  if vim.list_contains(connected_servers, listen_addr) then
+  if M.is_connected_to(listen_addr) then
     log.info("already connected to %s!", listen_addr)
     return
   end
-  local actual_addr = vim.fn.serverstart(listen_addr)
-  if actual_addr then
-    log.info("connected to %s", listen_addr)
+  local ok, result = pcall(vim.fn.serverstart, listen_addr)
+  if not ok then
+    log.error("unable to connect to %s: %s", listen_addr, result)
+  else
+    if result then
+      log.info("connected to %s", listen_addr)
+    end
   end
+end
+
+---@param listen_addr string ip4 addr or named pipe
+---@return boolean true if nvim is already listening on listen_addr
+function M.is_connected_to(listen_addr)
+  return vim.list_contains(vim.fn.serverlist(), listen_addr)
 end
 
 return M

@@ -141,7 +141,8 @@ end, {
 
 do
   local function post_startup()
-    if require("godot-tools.config").editor.auto_connect then
+    local project = require "godot-tools.project"
+    if project.root and require("godot-tools.config").editor.auto_connect then
       require("godot-tools.editor").connect()
     end
   end

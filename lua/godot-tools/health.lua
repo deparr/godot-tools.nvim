@@ -8,11 +8,11 @@ local function check_ip(addr)
     return false
   end
   a, b, c, d, p =
-    math.floor(tonumber(a)),
-    math.floor(tonumber(b)),
-    math.floor(tonumber(c)),
-    math.floor(tonumber(d)),
-    math.floor(tonumber(p))
+    math.floor(tonumber(a) or 256),
+    math.floor(tonumber(b) or 256),
+    math.floor(tonumber(c) or 256),
+    math.floor(tonumber(d) or 256),
+    math.floor(tonumber(p) or 65536)
   for _, octet in ipairs({ a, b, c, d }) do
     if octet > 255 then
       return false
@@ -34,16 +34,25 @@ function M.check()
     vim.health.ok(("%s is exescutable"):format(config.godot_bin))
   end
 
-  local addr_is_valid = true
+  vim.health.start "Editor"
   local listen_addr = config.editor.listen_addr
-  if listen_addr then
+  local addr_is_valid = listen_addr ~= nil
+  if listen_addr and listen_addr:find ":" then
     addr_is_valid = check_ip(listen_addr)
   end
   if not addr_is_valid then
     vim.health.warn(("'%s' is not a valid ip4 address. will be unable to connect to Godot"):format(listen_addr))
   else
-    vim.health.ok(("'%s' is a valid listen address"):format(listen_addr))
+    if require("godot-tools.editor").is_connected_to(listen_addr) then
+      vim.health.ok(("connected to: %s"):format(listen_addr))
+    else
+      vim.health.ok(("'%s' is a valid address"):format(listen_addr))
+    end
   end
+
+  vim.health.start "Project"
+  local project = require "godot-tools.project"
+  vim.health.info("Current project: " .. (project.root and project.root or "<none>"))
 end
 
 return M

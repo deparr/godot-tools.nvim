@@ -5,9 +5,9 @@ M.prefix = "godot"
 ---@param level integer log level
 ---@param fmt string log format string
 ---@param ... any format arguments
-local function notify(level, fmt, ...)
+local notify = vim.schedule_wrap(function(level, fmt, ...)
   vim.notify(("%s: %s"):format(M.prefix, fmt:format(...)), level)
-end
+end)
 
 ---@param fmt string log format string
 ---@param ... any format arguments
