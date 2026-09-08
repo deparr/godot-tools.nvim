@@ -7,8 +7,6 @@ local api = vim.api
 
 ---@class gdtools.Run.State
 M.state = {
-  ---@type string? uid of main scene
-  main_scene = nil,
   ---@type gdtools.Resource.Ref
   last_scene = nil,
   ---@type integer
@@ -17,20 +15,9 @@ M.state = {
   console_win = -1,
 }
 
-local extract_main_uid = require("godot-tools.util").extractor 'run/main_scene.*=.*%"(uid://.*)%"'
-
 --- Run the project's main scene
 function M.main()
-  -- todo this sucks, shouldn't copout with regex or ignore changes to the main scene
-  if not M.state.main_scene then
-    local project_file = vim.fs.joinpath(vim.fn.getcwd(), "project.godot")
-    M.state.main_scene = extract_main_uid(project_file)
-    if not M.state.main_scene then
-      log.error "unable to find main scene"
-      return
-    end
-  end
-  M.scene({ uid = M.state.main_scene })
+  M.scene({ uid = require("godot-tools.project").main_scene })
 end
 
 --- Run the last scene run with M.scene
