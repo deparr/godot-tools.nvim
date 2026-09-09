@@ -15,7 +15,6 @@ end
 Parser.whitespace = str2class " \t\r\n"
 Parser.attr_num = str2class "0123456789.-e"
 Parser.value_num = str2class "0123456789.-abcdefABCDEFx"
-Parser.key_value_sep = str2class " ="
 
 Parser.pat_ident_cont = "^[%w_]$"
 Parser.pat_ident_start = "^[_%a]$"
@@ -162,6 +161,16 @@ function Parser:take_to_any(sent_chars)
   return span
 end
 
+---@param char string
+---@return boolean true if `char` was found and consumed
+function Parser:take_if_char(char)
+  if self:at() == char then
+    self:advance()
+    return true
+  end
+  return false
+end
+
 ---@return gdtools.Resource.Parser.Block.Attrs[]
 function Parser:take_block_attrs()
   local attrs = {}
@@ -169,7 +178,7 @@ function Parser:take_block_attrs()
     self:skip_while_any(Parser.whitespace)
     local cur = self:at()
     if cur:match(Parser.pat_ident_start) then
-      local key = self:take_until_any(Parser.key_value_sep)
+      local key = self:take_ident()
       self:skip_while_any(Parser.whitespace)
       self:expect "="
       self:skip_while_any(Parser.whitespace)
@@ -185,7 +194,7 @@ function Parser:take_block_attrs()
   end
 
   if self:eof() then
-    error "unexpected eof"
+    error "Unexpected eof"
   end
 
   self:advance()
@@ -193,10 +202,12 @@ function Parser:take_block_attrs()
 end
 
 --todo better 'call_expr'
----@return gdtools.Variant
+---@return gdtools.Variant? # if `nil`, Parser is not pointing at a valid variant
 function Parser:take_variant(allowed_num_chars)
   local cur = self:at()
+  local start = self.pos
 
+  -- strings
   if (cur == "&" and self:peek() == '"') or cur == '"' then
     local is_stringname = false
     if cur == "&" then
@@ -204,7 +215,7 @@ function Parser:take_variant(allowed_num_chars)
       self:advance()
     end
     self:advance()
-    local start = self.pos
+    start = self.pos
     cur = self:at()
     while cur ~= '"' do
       if cur == "\\" then
@@ -215,29 +226,118 @@ function Parser:take_variant(allowed_num_chars)
       self:advance()
       cur = self:at()
       if self:eof() then
-        error "Unexpected eof"
+        error "Unterminated string"
       end
     end
     local str_value = self.src:sub(start, self.pos - 1)
     self:advance()
-    return is_stringname and { stringname = str_value } or str_value
+    return is_stringname and { _tag = "stringname", str = str_value } or str_value
+
+  -- numbers
   elseif cur:match(Parser.pat_attr_num_start) then
     local raw = self:take_while_any(allowed_num_chars)
-    local num = tonumber(raw) or error(("invalid num in take_variant: %d"):format(self.pos))
+    local num = tonumber(raw) or error(("invalid num in take_variant: %d"):format(start))
     return num
-  elseif cur:match(Parser.pat_ident_start) then
-    local checkpoint = self.pos
-    if cur == "t" or cur == "f" then
-      local raw_bool = self:take_until_any(Parser.whitespace)
-      if raw_bool == "true" or raw_bool == "false" then
-        return raw_bool == "true"
+
+  -- arrays
+  elseif cur == "[" then
+    self:advance()
+    local arr = {}
+    local n = 0
+    while not self:eof() and self:at() ~= "]" do
+      self:skip_while_any(Parser.whitespace)
+      local var = self:take_variant(Parser.value_num)
+      arr[n + 1] = var
+      self:skip_while_any(Parser.whitespace)
+      local comma = self:take_if_char ","
+      if comma and type(var) == "nil" then
+        error(("invalid array at pos: %d"):format(start))
+      elseif not comma and self:at() ~= "]" then
+        error "Expected ',' in array"
       end
+      n = n + 1
     end
-    self.pos = checkpoint
-    local call_expr = self:take_to_char ")"
-    return { call_expr = call_expr }
+    if self:eof() then
+      error "Unterminated array"
+    end
+    self:expect "]"
+    return { _tag = "array", data = arr }
+
+  -- dictionaries
+  elseif cur == "{" then
+    self:advance()
+    local entries = {}
+    local n = 0
+    while not self:eof() and self:at() ~= "}" do
+      self:skip_while_any(Parser.whitespace)
+      local key = self:take_variant(Parser.value_num)
+      if not key then
+        error(("expected dict key at pos %d got nil variant"):format(start))
+      end
+      self:skip_while_any(Parser.whitespace)
+      self:expect ":"
+      self:skip_while_any(Parser.whitespace)
+      local value = self:take_variant(Parser.value_num)
+      if not key then
+        error(("expected dict value at pos %d got nil variant"):format(start))
+      end
+      entries[n + 1] = { key, value }
+      self:skip_while_any(Parser.whitespace)
+      local comma = self:take_if_char ","
+      self:skip_while_any(Parser.whitespace)
+      n = n + 1
+    end
+    if self:eof() then
+      error "Unterminated dict"
+    end
+    self:expect "}"
+    return { _tag = "dict", data = entries }
+
+  -- constructors and builtin constants
+  elseif cur:match(Parser.pat_ident_start) then
+    local cons = self:take_ident()
+    if cons == "true" or cons == "false" then
+      return cons == "true"
+    elseif cons == "null" then
+      return { _tag = "null" }
+    end
+    self:skip_while_any(Parser.whitespace)
+    local _type = nil
+    if self:take_if_char "[" then
+      _type = self:take_until_char "]"
+      self:advance()
+    end
+    self:skip_while_any(Parser.whitespace)
+    self:expect "("
+    local args = {}
+    local n = 0
+    while not self:eof() and self:at() ~= ")" do
+      self:skip_while_any(Parser.whitespace)
+      local var = self:take_variant(Parser.value_num)
+      args[n + 1] = var
+      self:skip_while_any(Parser.whitespace)
+      local comma = self:take_if_char ","
+      if comma then
+        if type(var) == "nil" then
+          error(("invalid call at pos: %d"):format(start))
+        end
+      else
+        self:skip_while_any(Parser.whitespace)
+        if self:at() ~= ")" then
+          error(("invalid call at pos: %d"):format(start))
+        end
+      end
+      n = n + 1
+    end
+    if self:eof() then
+      error "Unterminated call expr"
+    end
+    self:expect ")"
+    return { _tag = "call", cons = cons, type = _type, args = args }
+
+  -- invalid variants
   else
-    error(("Unexpected '%s' at pos %d"):format(cur, self.pos))
+    return nil
   end
 end
 
@@ -247,20 +347,38 @@ function Parser:take_block_values()
   local values = {}
   while not self:eof() and self:at() ~= "[" do
     local cur = self:at()
-    if not cur:match(Parser.pat_ident_start) then
+    while cur == ";" do
+      self:skip_line()
+      self:skip_while_any(Parser.whitespace)
+      cur = self:at()
+    end
+    if cur == "[" then
+      break
+    elseif not cur:match(Parser.pat_ident_start) then
       error(("Unexpected '%s' at pos %d"):format(cur, self.pos))
     end
 
-    local key = self:take_until_any(Parser.key_value_sep)
+    local key = self:take_ident()
     self:skip_while_any(Parser.whitespace)
     self:expect "="
     self:skip_while_any(Parser.whitespace)
     local value = self:take_variant(Parser.value_num)
     values[key] = value
-
     self:skip_while_any(Parser.whitespace)
   end
   return values
+end
+
+---@return string
+function Parser:take_ident()
+  local start = self.pos
+  while not self:eof() and self:at():match(Parser.pat_ident_cont) do
+    self:advance()
+  end
+  if self:eof() then
+    error "Unexpected eof"
+  end
+  return self.src:sub(start, self.pos - 1)
 end
 
 function Parser:eof()

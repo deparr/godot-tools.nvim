@@ -1,3 +1,6 @@
+---@meta
+error "requiring a meta file is a bug"
+
 ---@class gdtools.Command
 ---@field fn fun(ctx: gdtools.Command.Context) function to run
 ---@field nargs integer number of required arguments
@@ -46,4 +49,13 @@
 ---@field values gdtools.Resource.Value[]
 
 ---@alias gdtools.Resource.Value table<string, gdtools.Variant>
----@alias gdtools.Variant number|string|boolean|{call_expr: string}|{stringname: string}
+
+---@alias gdtools.Variant
+---| number
+---| string
+---| boolean
+---| { _tag: "call", cons: string, args: gdtools.Variant[] }
+---| { _tag: "stringname", str: string }
+---| { _tag: "array", data: gdtools.Variant[] }
+---| { _tag: "dict", data: { gdtools.Variant, gdtools.Variant } }
+---| { _tag: "null" }
