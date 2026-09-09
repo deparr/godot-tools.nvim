@@ -39,14 +39,21 @@ error "requiring a meta file is a bug"
 ---@field ext_resources gdtools.ExtResource[]
 ---@field sub_resources gdtools.SubResource[]
 ---@field nodes gdtools.Node[]
+---@field conns gdtools.SignalCon[]
 
 ---@class gdtools.Node
 ---@field name string
 ---@field type string?
 ---@field parent string?
 ---@field unique_id integer
----@field instance {call_expr: string}?
+---@field instance gdtools.Variant.Call
 ---@field values gdtools.Resource.Value[]
+
+---@class gdtools.SignalCon
+---@field signal string
+---@field from string
+---@field to string
+---@field method string
 
 ---@alias gdtools.Resource.Value table<string, gdtools.Variant>
 
@@ -54,8 +61,14 @@ error "requiring a meta file is a bug"
 ---| number
 ---| string
 ---| boolean
----| { _tag: "call", cons: string, args: gdtools.Variant[] }
----| { _tag: "stringname", str: string }
----| { _tag: "array", data: gdtools.Variant[] }
----| { _tag: "dict", data: { gdtools.Variant, gdtools.Variant } }
----| { _tag: "null" }
+---| gdtools.Variant.Call
+---| gdtools.Variant.StringName
+---| gdtools.Variant.Array
+---| gdtools.Variant.Dict
+---| gdtools.Variant.Null
+
+---@alias gdtools.Variant.Call { _tag: "call", cons: string, args: gdtools.Variant[] }
+---@alias gdtools.Variant.StringName { _tag: "stringname", str: string }
+---@alias gdtools.Variant.Array { _tag: "array", data: gdtools.Variant[] }
+---@alias gdtools.Variant.Dict { _tag: "dict", data: { gdtools.Variant, gdtools.Variant}[] }
+---@alias gdtools.Variant.Null { _tag: "null" }

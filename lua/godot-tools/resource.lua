@@ -13,6 +13,7 @@ local Tag = {
   EXT_RESOURCE = "ext_resource",
   NODE = "node",
   RESOURCE = "resource",
+  CONNECTION = "connection",
 }
 
 ---@param path string path to load from
@@ -86,10 +87,11 @@ end
 ---@return gdtools.Scene
 function M.load_scene_str(source)
   local parser = Parser.new(source)
-  local scene, ext_resources, sub_resources, nodes = {}, {}, {}, {}
+  local scene, ext_resources, sub_resources, nodes, conns = {}, {}, {}, {}, {}
   scene.ext_resources = ext_resources
   scene.sub_resources = sub_resources
   scene.nodes = nodes
+  scene.conns = conns
   local found_main_tag = false
   for block in parser:block_stream() do
     if block.tag == Tag.ROOT_SCENE then
@@ -121,6 +123,14 @@ function M.load_scene_str(source)
         values = block.values,
       }
       nodes[#nodes + 1] = node
+    elseif block.tag == Tag.CONNECTION then
+      local conn = {
+        signal = block.attrs.signal,
+        from = block.attrs.from,
+        to = block.attrs.to,
+        method = block.attrs.method,
+      }
+      conns[#conns + 1] = conn
     else
       log.warn(("TODO unexpected block.tag in scene: %s"):format(block.tag))
     end
