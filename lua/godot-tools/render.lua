@@ -45,9 +45,10 @@ end
 
 ---@class gdtools.Render.opts
 local default_render_opts = {
-  max_depth = 2,
+  max_depth = 4,
   show_type = "auto",
   show_indicators = true,
+  extra_spacing = false,
 }
 
 ---@class gdtools.Render.Context
@@ -204,6 +205,13 @@ function M.scene_tree(scene, opts)
       local next_prefix = prefix .. (is_last and "   " or "│  ")
       if depth < opts.max_depth then
         walk(full_path, depth + 1, next_prefix)
+      end
+    end
+    if ctx.opts.extra_spacing and #childs > 0 then
+      ctx.lines[#ctx.lines + 1] = prefix
+      if #prefix > 0 then
+        ctx.hls[#ctx.hls + 1] =
+          { line = #ctx.lines - 1, col_beg = 0, col_end = #prefix, group = "GDToolsSceneTreeRelLine" }
       end
     end
   end
