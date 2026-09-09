@@ -87,4 +87,12 @@ function M.toggle_console()
   end
 end
 
+function M.health_check()
+  if vim.fn.executable(config.godot_bin) == 0 then
+    vim.health.warn(("'%s' is not executable."):format(config.godot_bin))
+  else
+    vim.health.ok(("%s is executable"):format(config.godot_bin))
+  end
+end
+
 return M

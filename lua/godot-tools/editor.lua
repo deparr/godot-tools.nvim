@@ -75,4 +75,38 @@ function M.is_connected_to(listen_addr)
   return vim.list_contains(vim.fn.serverlist(), listen_addr)
 end
 
+function M.health_check()
+  local function check_ip(addr)
+    local a, b, c, d, p = addr:match "^(%d+)%.(%d+)%.(%d+)%.(%d+)%:(%d+)$"
+    if not a then
+      return false
+    end
+    a, b, c, d, p = tonumber(a), tonumber(b), tonumber(c), tonumber(d), tonumber(p)
+    for _, octet in ipairs({ a, b, c, d }) do
+      if (octet or 256) > 255 then
+        return false
+      end
+    end
+    if (p or 65536) > 65535 then
+      return false
+    end
+    return true
+  end
+  local config = require "godot-tools.config"
+  local listen_addr = config.editor.listen_addr
+  local addr_is_valid = listen_addr ~= nil
+  if listen_addr and listen_addr:find ":" then
+    addr_is_valid = check_ip(listen_addr)
+  end
+  if not addr_is_valid then
+    vim.health.warn(("'%s' is not a valid ip4 address. will be unable to connect to Godot"):format(listen_addr))
+  else
+    if require("godot-tools.editor").is_connected_to(listen_addr) then
+      vim.health.ok(("connected to: %s"):format(listen_addr))
+    else
+      vim.health.ok(("'%s' is a valid address"):format(listen_addr))
+    end
+  end
+end
+
 return M

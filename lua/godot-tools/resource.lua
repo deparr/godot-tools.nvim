@@ -5,20 +5,9 @@ local cache = require "godot-tools.resource.cache"
 
 local M = {}
 
----@enum Tag known tags for resource blocks
-local Tag = {
-  ROOT_RESOURCE = "gd_resouce",
-  ROOT_SCENE = "gd_scene",
-  SUB_RESOURCE = "sub_resource",
-  EXT_RESOURCE = "ext_resource",
-  NODE = "node",
-  RESOURCE = "resource",
-  CONNECTION = "connection",
-}
-
 ---@param path string path to load from
 ---@param expected_type string? expected type of loaded resource
----@return gdtools.Resource
+---@return gdtools.Resource?
 function M.load(path, expected_type)
   local cached = cache.get(path)
   if cached then
@@ -29,46 +18,27 @@ function M.load(path, expected_type)
     error(("failed to open file: %s"):format(path))
   end
   local source = f:read "a"
-  return M.load_str(source, expected_type)
+  local resource = M.load_str(source, expected_type)
+  if resource then
+    cache.set(path, resource)
+  end
+  return resource
 end
 
 ---@param source string source to load from
 ---@param expected_type? string expected type of loaded resource
----@return gdtools.Resource
+---@return gdtools.Resource?
 function M.load_str(source, expected_type)
-  local parser = Parser.new(source)
-  local res, sub_resources = {}, {}
-  res.sub_resources = sub_resources
-  local found_main_tag = false
-  for block in parser:block_stream() do
-    if block.tag == Tag.ROOT_RESOURCE then
-      found_main_tag = true
-      res.type = block.attrs.type
-      res.format = block.attrs.format
-      res.uid = block.attrs.uid
-    elseif block.tag == Tag.SUB_RESOURCE then
-      local sub_res = {
-        type = block.attrs.type,
-        id = block.attrs.id,
-        values = block.values,
-      }
-      sub_resources[#res.sub_resources + 1] = sub_res
-    elseif block.tag == Tag.RESOURCE then
-      res.values = block.values
-    else
-      log.warn(("TODO unexpected block.tag in resource: %s"):format(block.tag))
-    end
+  local ok, result = pcall(Parser.parse_resource, source)
+  if not ok then
+    log.error("parsing resource: %s", result)
+    return
   end
-
-  if not found_main_tag then
-    log.error "Did not find main tag for resource"
-  end
-
-  return res
+  return result
 end
 
 ---@param path string path to load from
----@return gdtools.Scene
+---@return gdtools.Scene?
 function M.load_scene(path)
   local cached = cache.get(path)
   if cached then
@@ -80,67 +50,24 @@ function M.load_scene(path)
   end
   local source = f:read "a"
   f:close()
-  return M.load_scene_str(source)
+  local scene = M.load_scene_str(source)
+  if scene then
+    cache.set(path, scene)
+  end
+  return scene
 end
 
+--- The cache is keyed by path so this function will always
+--- reparse `source`
 ---@param source string string to load from
----@return gdtools.Scene
+---@return gdtools.Scene?
 function M.load_scene_str(source)
-  local parser = Parser.new(source)
-  local scene, ext_resources, sub_resources, nodes, conns = {}, {}, {}, {}, {}
-  scene.ext_resources = ext_resources
-  scene.sub_resources = sub_resources
-  scene.nodes = nodes
-  scene.conns = conns
-  local found_main_tag = false
-  for block in parser:block_stream() do
-    if block.tag == Tag.ROOT_SCENE then
-      found_main_tag = true
-      scene.format = block.attrs.format
-      scene.uid = block.attrs.uid
-    elseif block.tag == Tag.EXT_RESOURCE then
-      local ext_res = {
-        type = block.attrs.type,
-        uid = block.attrs.uid,
-        path = block.attrs.path,
-        id = block.attrs.id,
-      }
-      ext_resources[#ext_resources + 1] = ext_res
-    elseif block.tag == Tag.SUB_RESOURCE then
-      local sub_res = {
-        type = block.attrs.type,
-        id = block.attrs.id,
-        values = block.values,
-      }
-      sub_resources[#sub_resources + 1] = sub_res
-    elseif block.tag == Tag.NODE then
-      local node = {
-        name = block.attrs.name,
-        type = block.attrs.type,
-        parent = block.attrs.parent,
-        unique_id = block.attrs.unique_id,
-        instance = block.attrs.instance,
-        values = block.values,
-      }
-      nodes[#nodes + 1] = node
-    elseif block.tag == Tag.CONNECTION then
-      local conn = {
-        signal = block.attrs.signal,
-        from = block.attrs.from,
-        to = block.attrs.to,
-        method = block.attrs.method,
-      }
-      conns[#conns + 1] = conn
-    else
-      log.warn(("TODO unexpected block.tag in scene: %s"):format(block.tag))
-    end
+  local ok, result = pcall(Parser.parse_scene, source)
+  if not ok then
+    log.error("parsing scene: %s", result)
+    return
   end
-
-  if not found_main_tag then
-    log.error "Did not find main tag for scene"
-  end
-
-  return scene
+  return result
 end
 
 --- This **does not** convert uid:// 's into res:// paths,
@@ -157,6 +84,19 @@ function M.path(real_path)
 
   -- todo this hsould use the found project directory instead of cwd()
   return "res://" .. vim.fs.relpath(vim.fn.getcwd(), vim.fs.normalize(vim.fs.abspath(real_path)))
+end
+
+function M.health_check()
+  local cached, timer_active = cache.stats()
+  if timer_active then
+    vim.health.ok "Cache clean timer is active"
+  else
+    vim.health.warn "Cache clean timer is NOT active. Cache will not be pruned automatically"
+  end
+  vim.health.info(("Cache Keys (%d):"):format(#cached))
+  for _, p in ipairs(cached) do
+    vim.health.info(p)
+  end
 end
 
 return M

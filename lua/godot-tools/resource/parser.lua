@@ -16,7 +16,7 @@ Parser.whitespace = str2class " \t\r\n"
 Parser.attr_num = str2class "0123456789.-e"
 Parser.value_num = str2class "0123456789.-abcdefABCDEFx"
 
-Parser.pat_ident_cont = "^[%w_]$"
+Parser.pat_ident_cont = "^[%w_%/]$"
 Parser.pat_ident_start = "^[_%a]$"
 Parser.pat_attr_num_start = "^[%-%d]$"
 
@@ -30,6 +30,112 @@ function Parser.new(src)
   end
   parser.pos = 1
   return parser
+end
+
+---@enum Tag known tags for resource blocks
+local Tag = {
+  ROOT_RESOURCE = "gd_resource",
+  ROOT_SCENE = "gd_scene",
+  SUB_RESOURCE = "sub_resource",
+  EXT_RESOURCE = "ext_resource",
+  NODE = "node",
+  RESOURCE = "resource",
+  CONNECTION = "connection",
+}
+
+---@param source string tscn file contents
+---@return gdtools.Scene
+function Parser.parse_scene(source)
+  local log = require "godot-tools.log"
+  local parser = Parser.new(source)
+  local scene, ext_resources, sub_resources, nodes, conns = {}, {}, {}, {}, {}
+  scene.ext_resources = ext_resources
+  scene.sub_resources = sub_resources
+  scene.nodes = nodes
+  scene.conns = conns
+  local found_main_tag = false
+  for block in parser:block_stream() do
+    if block.tag == Tag.ROOT_SCENE then
+      found_main_tag = true
+      scene.format = block.attrs.format
+      scene.uid = block.attrs.uid
+    elseif block.tag == Tag.EXT_RESOURCE then
+      local ext_res = {
+        type = block.attrs.type,
+        uid = block.attrs.uid,
+        path = block.attrs.path,
+        id = block.attrs.id,
+      }
+      ext_resources[#ext_resources + 1] = ext_res
+    elseif block.tag == Tag.SUB_RESOURCE then
+      local sub_res = {
+        type = block.attrs.type,
+        id = block.attrs.id,
+        values = block.values,
+      }
+      sub_resources[#sub_resources + 1] = sub_res
+    elseif block.tag == Tag.NODE then
+      local node = {
+        name = block.attrs.name,
+        type = block.attrs.type,
+        parent = block.attrs.parent,
+        unique_id = block.attrs.unique_id,
+        instance = block.attrs.instance,
+        values = block.values,
+      }
+      nodes[#nodes + 1] = node
+    elseif block.tag == Tag.CONNECTION then
+      local conn = {
+        signal = block.attrs.signal,
+        from = block.attrs.from,
+        to = block.attrs.to,
+        method = block.attrs.method,
+      }
+      conns[#conns + 1] = conn
+    else
+      log.warn(("TODO unexpected block.tag in scene: %s"):format(block.tag))
+    end
+  end
+
+  if not found_main_tag then
+    log.warn "Did not find main tag for scene"
+  end
+
+  return scene
+end
+
+---@param source string tres file contents
+function Parser.parse_resource(source)
+  local log = require "godot-tools.log"
+  local parser = Parser.new(source)
+  local res, sub_resources = {}, {}
+  res.sub_resources = sub_resources
+  local found_main_tag = false
+  for block in parser:block_stream() do
+    if block.tag == Tag.ROOT_RESOURCE then
+      found_main_tag = true
+      res.type = block.attrs.type
+      res.format = block.attrs.format
+      res.uid = block.attrs.uid
+    elseif block.tag == Tag.SUB_RESOURCE then
+      local sub_res = {
+        type = block.attrs.type,
+        id = block.attrs.id,
+        values = block.values,
+      }
+      sub_resources[#res.sub_resources + 1] = sub_res
+    elseif block.tag == Tag.RESOURCE then
+      res.values = block.values
+    else
+      log.warn(("TODO unexpected block.tag in resource: %s"):format(block.tag))
+    end
+  end
+
+  if not found_main_tag then
+    log.warn "Did not find main tag for resource"
+  end
+
+  return res
 end
 
 ---@return gdtools.Resource.Parser.Block[]

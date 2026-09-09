@@ -28,6 +28,10 @@ local function extract_main()
   error("unable to find main scene in " .. path)
 end
 
+function M.health_check()
+  vim.health.info("Current project: " .. (M.root or "<none>"))
+end
+
 do
   setmetatable(M, {
     __index = function(_, k)
