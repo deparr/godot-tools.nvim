@@ -8,8 +8,10 @@ local M = {}
 ---@param col string? col to move to
 function M.open(path, line, col)
   local file_name = vim.fn.fnamemodify(path, ":p:.")
-  local file_line = math.floor(tonumber(line) or 1)
-  local file_col = math.floor(tonumber(col) or 1)
+  line = math.max((tonumber(line) or 1), 1)
+  col = math.max((tonumber(col) or 1) - 1, 0)
+  local file_line = math.floor(line)
+  local file_col = math.floor(col)
 
   ---@type integer
   local target_buf
