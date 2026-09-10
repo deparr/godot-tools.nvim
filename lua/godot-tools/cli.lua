@@ -100,6 +100,12 @@ local commands = {
       return bang and nil or scene_complete(args[#args])
     end,
   },
+  editor = {
+    fn = function(ctx)
+      require("godot-tools.run").editor()
+    end,
+    nargs = 0,
+  },
 }
 
 ---@param arglead string

@@ -115,11 +115,23 @@ If given, {query} is passed to the picker as an initial filter.
 Starts listening for remote events on {addr}.
 Equivalent to |godot-tools-editor.connect|.
 
+                                                                 *:Godot_editor*
+>vim
+    :Godot editor
+<
+Opens the current project in the Godot editor.
+
+This will always be the project pointed to by: >lua
+    require("godot-tools.project").root
+<
+Equivalent to |godot-tools-run.editor|
+
                                                                    *:Godot_open*
 >vim
     :Godot open {path} {line} {col}
 <
-Intended to be called by the Godot editor, not by users.
+Intended to be called by the Godot editor as a `--remote-send` rpc call,
+not directly by users.
 See |godot-tools-godot-setup|.
 Equivalent to |godot-tools-editor.open|.
 
@@ -187,9 +199,18 @@ scene({ref})                                             *godot-tools-run.scene*
     require("godot-tools.run").scene({path = "res://scenes/preview_test.tscn"})
 <
 
+editor()                                                *godot-tools-run.editor*
+    Opens the current project in the Godot Editor.
+
+    This will always be the project at >lua
+    require("godot-tools.project").root
+<
+    The actual godot command run is >bash
+    godot --edit ${project_root}/project.godot
+<
+
 toggle_console()                                *godot-tools-run.toggle_console*
     Toggle visibility of the godot-tools console window.
-
 
 ------------------------------------------------------------------------------
 RENDER                                                      *godot-tools-render*
