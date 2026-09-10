@@ -91,16 +91,15 @@ function M.scene(ref)
   end
 end
 
---- Opens `require("godot-tools.project").root` in the godot editor
+--- Opens opens the project at
+--- `require("godot-tools.project").root` in the godot editor
 function M.editor()
   local project = require "godot-tools.project"
   if not project.root then
     log.error "project root is missing, not opening editor"
     return
   end
-  local project_godot = vim.fs.joinpath(project.root, "project.godot")
-  local args = { config.godot_bin, "--edit", project_godot }
-
+  local args = { config.godot_bin, "--editor", "--path", project.root }
   vim.system(args, { detach = true, cwd = project.root })
 end
 
