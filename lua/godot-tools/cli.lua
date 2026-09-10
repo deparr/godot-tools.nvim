@@ -49,7 +49,7 @@ local commands = {
     end,
     nargs = 0,
   },
-  scene = {
+  run = {
     fn = function(ctx)
       if #ctx.args < 1 and not ctx.bang then
         -- todo this should be a generic 'find' module

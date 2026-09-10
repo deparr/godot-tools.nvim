@@ -68,22 +68,22 @@ include one of the sub-commands listed below:
 <
 Runs the project's main scene. Equivalent to |godot-tools-run.main|.
 
-                                                                  *:Godot_scene*
+                                                                    *:Godot_run*
 >vim
-    :Godot scene
+    :Godot run
 <
 With no arguments, `scene` opens a picker of `tscn` files and runs the
 selected file.
 
 >vim
-    :Godot scene {ref}
+    :Godot run {ref}
 <
 Runs the scene specified by {ref}. {ref} can be a regular path,
 godot `res://` path, or godot `uid://`.
 Equivalent to |godot-tools-run.scene|.
 
 >vim
-    :Godot! scene
+    :Godot! run
 <
 With bang, `scene` reruns the previously run scene.
 Equivalent to |godot-tools-run.last|
