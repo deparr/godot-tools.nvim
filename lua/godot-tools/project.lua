@@ -1,5 +1,4 @@
 local M = {}
-
 M.main_scene = nil
 M.root = nil
 
@@ -28,19 +27,47 @@ local function extract_main()
   error("unable to find main scene in " .. path)
 end
 
+--- Reparses the `project.godot` file to extract
+--- project info
+function M.update_project_info()
+  local log = require "godot-tools.log"
+  if not M.root then
+    log.error "No project root!"
+    return
+  end
+
+  local project_file = vim.fs.joinpath(M.root, "project.godot")
+  local f, err = io.open(project_file, "r")
+  if not f then
+    log.error("Unable to open project.godot: %s", err)
+    return
+  end
+
+  local config_source = f:read "a"
+  f:close()
+
+  local Parser = require "godot-tools.project.parser"
+  local ok, res = pcall(Parser.parse, config_source)
+  if not ok then
+    log.error("Unable to parse project.godot: %s", res)
+    return
+  end
+
+  if res.application then
+    local main_ref = res.application["run/main_scene"]
+    if main_ref then
+      M.main_scene = vim.startswith(main_ref, "uid://") and { uid = main_ref } or { path = main_ref }
+    end
+  end
+end
+
 function M.health_check()
   vim.health.info("Current project: " .. (M.root or "<none>"))
+  local main_ref = M.main_scene and (M.main_scene.uid or M.main_scene.path) or "<no main scene>"
+  vim.health.info("Main Scene: " .. main_ref)
 end
 
 do
-  setmetatable(M, {
-    __index = function(_, k)
-      if k == "main_scene" then
-        M.main_scene = extract_main()
-        return M.main_scene
-      end
-    end,
-  })
   M.update_project_root()
 end
 

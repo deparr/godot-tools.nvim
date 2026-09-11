@@ -32,7 +32,7 @@ function Parser.new(src)
   return parser
 end
 
----@enum Tag known tags for resource blocks
+---@enum (file) Tag known tags for resource blocks
 local Tag = {
   ROOT_RESOURCE = "gd_resource",
   ROOT_SCENE = "gd_scene",
@@ -105,6 +105,7 @@ function Parser.parse_scene(source)
 end
 
 ---@param source string tres file contents
+---@return gdtools.Resource
 function Parser.parse_resource(source)
   local log = require "godot-tools.log"
   local parser = Parser.new(source)
@@ -138,11 +139,9 @@ function Parser.parse_resource(source)
   return res
 end
 
+--- collects the remaining blocks in `self`
 ---@return gdtools.Resource.Parser.Block[]
-function Parser:parse()
-  if self.pos ~= 1 then
-    error "parse() called on parser not at start"
-  end
+function Parser:blocks()
   local blocks = {}
   local n = 1
   for block in self:block_stream() do
@@ -164,6 +163,7 @@ function Parser:at()
   return self.src:sub(self.pos, self.pos)
 end
 
+---@param len integer peek distance
 ---@return string # the char `len` bytes ahead
 function Parser:peek(len)
   len = len or 1
@@ -307,7 +307,6 @@ function Parser:take_block_attrs()
   return attrs
 end
 
---todo better 'call_expr'
 ---@return gdtools.Variant? # if `nil`, Parser is not pointing at a valid variant
 function Parser:take_variant(allowed_num_chars)
   local cur = self:at()
@@ -493,12 +492,9 @@ end
 
 ---@class gdtools.Resource.Parser.Block
 ---@field tag string block type
----@field attrs gdtools.Resource.Parser.Block.Attrs
----@field values gdtools.Resource.Parser.Block.Values
+---@field attrs table<string, gdtools.Variant>
+---@field values table<string, gdtools.Variant>
 ---@field start integer start pos
 ---@field stop integer end pos, includes trailng whitespace
-
----@alias gdtools.Resource.Parser.Block.Attrs table<string, gdtools.Variant>
----@alias gdtools.Resource.Parser.Block.Values table<string, gdtools.Variant>
 
 return Parser
