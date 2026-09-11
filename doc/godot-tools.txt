@@ -53,6 +53,9 @@ NOTE: You do not need to call `setup` to use the default config.
             auto_connect = true,
             listen_addr = "127.0.0.1:6004",
         },
+        project = {
+            auto_watch = true,
+        },
     })
 <
 
@@ -211,6 +214,53 @@ editor()                                                *godot-tools-run.editor*
 
 toggle_console()                                *godot-tools-run.toggle_console*
     Toggle visibility of the godot-tools console window.
+
+------------------------------------------------------------------------------
+PROJECT                                                    *godot-tools-project*
+
+The project module provides tools for working with the project configuration
+files.
+
+The primary function is keeping track of the `project.godot` file and exposing
+the contents to the rest of the plugin.
+
+root                                                  *godot-tools-project.root*
+
+The project root directory is available at >lua
+    require("godot-tools.project").root
+<
+It may be {nil} if outside of a godot project.
+
+main_scene                                      *godot-tools-project.main_scene*
+
+The project main scene is available at >lua
+    require("godot-tools.project").main_scene
+<
+It will be {nil} if outside of a godot project or the project does
+not set it.
+
+update_root()                                  *godot-tools-project.update_root*
+
+Re-searches for and updates the project root directory.
+Equivalent to >lua
+    vim.fs.root(0, "project.godot")
+<
+The root path is normalized.
+
+update_info()                                  *godot-tools-project.update_info*
+
+Reparses `project.godot` and updates the module state (main_scene, etc)
+
+
+start_watch()                                  *godot-tools-project.start_watch*
+
+Starts watching `project.godot` with |uv.fs_event_start()|. On changes,
+`project.godot` is reparsed and the module state is updated.
+See |godot-tools-project.update_info|.
+
+stop_watch()                                    *godot-tools-project.stop_watch*
+
+If active, stops the uv.fs_event on `project.godot`.
 
 ------------------------------------------------------------------------------
 RENDER                                                      *godot-tools-render*

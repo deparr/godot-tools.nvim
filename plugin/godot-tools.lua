@@ -20,9 +20,14 @@ end, {
 do
   local function post_startup()
     local project = require "godot-tools.project"
+    local config = require "godot-tools.config"
     ---@diagnostic disable-next-line unecessary-if
-    if project.root and require("godot-tools.config").editor.auto_connect then
+    if project.root and config.editor.auto_connect then
       require("godot-tools.editor").connect()
+    end
+
+    if project.root and config.project.auto_watch then
+      require("godot-tools.project").start_watch()
     end
   end
 
