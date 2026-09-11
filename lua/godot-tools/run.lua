@@ -19,7 +19,7 @@ M.state = {
 
 --- Run the project's main scene
 function M.main()
-  M.scene({ uid = require("godot-tools.project").main_scene })
+  M.scene(require("godot-tools.project").main_scene)
 end
 
 --- Run the last scene run with M.scene

@@ -1,6 +1,8 @@
 local M = {}
 
+---@type gdtools.Resource.Ref?
 M.main_scene = nil
+---@type string?
 M.root = nil
 
 function M.update_root()
