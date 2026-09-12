@@ -72,3 +72,4 @@ error "requiring a meta file is a bug"
 ---@alias gdtools.Variant.Array { _tag: "array", data: gdtools.Variant[] }
 ---@alias gdtools.Variant.Dict { _tag: "dict", data: { gdtools.Variant, gdtools.Variant}[] }
 ---@alias gdtools.Variant.Null { _tag: "null" }
+---@alias gdtools.Variant.Object { _tag: "object", class: string, data: { gdtools.Variant, gdtools.Variant}[] }

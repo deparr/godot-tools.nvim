@@ -243,7 +243,7 @@ function Parser:take_variant()
       if comma and type(var) == "nil" then
         error(("invalid array at pos: %d"):format(start))
       elseif not comma and self:at() ~= "]" then
-        error "Expected ',' in array"
+        error(("Expected ',' in array pos: %d"):format(self.pos))
       end
       n = n + 1
     end
@@ -290,6 +290,8 @@ function Parser:take_variant()
       return cons == "true"
     elseif cons == "null" then
       return { _tag = "null" }
+    elseif cons == "Object" then
+      return self:take_object()
     end
     self:skip_while_any(Parser.whitespace)
     local _type = nil
@@ -329,6 +331,49 @@ function Parser:take_variant()
   else
     return nil
   end
+end
+
+---@return gdtools.Variant
+function Parser:take_object()
+  local start = self.pos
+  self:skip_whitespace()
+  self:expect "("
+  local class = self:take_ident()
+  self:skip_whitespace()
+  self:expect ","
+  self:skip_whitespace()
+  local data = {}
+  local n = 0
+  local comma = true
+  while not self:eof() and self:at() ~= ")" do
+    local field = self:take_variant()
+    if type(field) ~= "string" then
+      error(("expected object field type to be a string at pos: %d"):format(start))
+    end
+    if not comma then
+      error(("expected ',' to separate object fields at pos: %d"):format(start))
+    end
+    self:skip_whitespace()
+    self:expect ":"
+    self:skip_whitespace()
+    local value = self:take_variant()
+    if type(value) == "nil" then
+      error(("expected valid variant in object at pos: %d"):format(start))
+    end
+    data[n + 1] = { field, value }
+    self:skip_whitespace()
+    comma = self:take_if_char ","
+    self:skip_whitespace()
+    n = n + 1
+  end
+
+  if self:eof() then
+    error "Unterminated Object"
+  end
+
+  self:expect ")"
+
+  return { _tag = "object", class = class, data = data }
 end
 
 ---@return string
