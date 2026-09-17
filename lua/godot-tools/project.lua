@@ -58,15 +58,18 @@ local watch_state = {
 
 function M.health_check()
   vim.health.info("Current project: " .. (M.root or "<none>"))
-  local main_ref = M.main_scene and (M.main_scene.uid or M.main_scene.path) or "<no main scene>"
+  local main_ref = M.main_scene and (M.main_scene.uid or M.main_scene.path) or "<none>"
   vim.health.info("Main Scene: " .. main_ref)
 
   if watch_state.status == "inactive" then
-    vim.health.info 'NOT watching project.godot for changes\n  to start: `require("godot-tools.project").start_watch()`'
+    vim.health.warn(
+      "not watching project.godot for changes",
+      'to start: `require("godot-tools.project").start_watch()`'
+    )
   elseif watch_state.status == "active" then
     local msg =
       'Watching project.godot for changes\n  Last Change: %ds ago\n  to stop: `require("godot-tools.project").stop_watch()`'
-    vim.health.info(msg:format(os.time() - watch_state.last_event_at))
+    vim.health.ok(msg:format(os.time() - watch_state.last_event_at))
   elseif watch_state.status == "error" then
     vim.health.warn(
       ("Error starting uv watch: %s"):format(watch_state.last_error),
@@ -86,6 +89,10 @@ function M.start_watch()
   local log = require "godot-tools.log"
   if not M.root then
     log.warn "no root to watch!"
+    return
+  end
+  if watch_state.status ~= "inactive" then
+    log.error "watch is already active or errored, see health"
     return
   end
   local uv = vim.uv
@@ -147,7 +154,9 @@ end
 
 do
   M.update_root()
-  M.update_info()
+  if M.root then
+    M.update_info()
+  end
 end
 
 return M

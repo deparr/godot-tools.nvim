@@ -1,7 +1,4 @@
 if vim.g.gd_tools_loaded then
-  vim.schedule(function()
-    vim.notify "would redefine :Godot"
-  end)
   return
 end
 vim.g.gd_tools_loaded = true

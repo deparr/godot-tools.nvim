@@ -13,7 +13,7 @@ M.state = {
   console_buf = -1,
   ---@type integer
   console_win = -1,
-  ---@type table<number, { argv: string[], pid: integer }
+  ---@type table<number, { argv: string[], pid: integer, id: integer }
   jobs = {},
 }
 
@@ -84,7 +84,7 @@ function M.scene(ref)
 
   if id > 0 then
     vim.cmd "startinsert"
-    M.state.jobs[id] = { argv = argv, pid = vim.fn.jobpid(id) }
+    M.state.jobs[id] = { argv = argv, pid = vim.fn.jobpid(id), id = id }
     M.state.last_scene = ref
   else
     log.error("unable to run godot: " .. (id == -1 and "invaild job args" or "cmd[0] is not executable"))
@@ -127,11 +127,15 @@ function M.health_check()
     vim.health.ok(("%s is executable"):format(config.godot_bin))
   end
 
-  if #vim.tbl_keys(M.state.jobs) > 0 then
-    vim.health.info "Jobs:"
+  local num_jobs = #vim.tbl_keys(M.state.jobs)
+  if num_jobs > 0 then
+    local lines = { ("Active Jobs (%d): "):format(num_jobs) }
+    local n = 1
     for _, job in pairs(M.state.jobs) do
-      vim.health.info(("PID %d: %s"):format(job.pid, table.concat(job.argv, " ")))
+      lines[n + 1] = ("  ID=%d PID=%d argv='%s'"):format(job.id, job.pid, table.concat(job.argv, " "))
+      n = n + 1
     end
+    vim.health.info(table.concat(lines, "\n"))
   else
     vim.health.info "No active jobs"
   end
