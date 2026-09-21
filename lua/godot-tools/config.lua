@@ -5,7 +5,7 @@ local default_config = {
     listen_addr = "127.0.0.1:6004",
   },
   project = {
-    auto_watch = true,
+    auto_watch = false,
   },
 }
 

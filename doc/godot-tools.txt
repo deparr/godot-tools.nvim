@@ -54,7 +54,7 @@ NOTE: You do not need to call `setup` to use the default config.
             listen_addr = "127.0.0.1:6004",
         },
         project = {
-            auto_watch = true,
+            auto_watch = false,
         },
     })
 <
