@@ -28,6 +28,15 @@ local function scene_complete(lead)
     :totable()
 end
 
+local function list_complete(lead, list)
+  return vim
+    .iter(list)
+    :filter(function(x)
+      return vim.startswith(x, lead)
+    end)
+    :totable()
+end
+
 ---@type table<string, gdtools.Command>
 local commands = {
   connect = {
@@ -106,6 +115,35 @@ local commands = {
     end,
     nargs = 0,
   },
+  export = {
+    fn = function(ctx)
+      local preset = ctx.args[1]
+      if preset then
+        local mode, path = ctx.args[2], ctx.args[3]
+        require("godot-tools.run").export_runnable(preset, { mode = mode, path_override = path })
+        return
+      end
+      local presets = require("godot-tools.project").runnable_preset_names()
+      vim.ui.select(presets, { prompt = "Export a Preset:" }, function(choice)
+        if choice then
+          require("godot-tools.run").export_runnable(choice)
+        end
+      end)
+    end,
+    nargs = 0,
+    complete = function(args, bang)
+      local candidates
+      if #args == 1 then
+        local names = require("godot-tools.project").runnable_preset_names()
+        candidates = list_complete(args[1], names)
+      elseif #args == 2 then
+        candidates = list_complete(args[2], { "debug", "release" })
+      elseif #args == 3 then
+        candidates = vim.fn.getcompletion(args[3], "dir")
+      end
+      return candidates
+    end,
+  },
 }
 
 ---@param arglead string
@@ -121,13 +159,7 @@ function M.complete(arglead, line)
     return type(cmd_info.complete) == "function" and cmd_info.complete(args, bang) or cmd_info.complete
   end
 
-  ---@diagnostic disable-next-line call-non-callable
-  return vim
-    .iter(vim.tbl_keys(commands))
-    :filter(function(x)
-      return vim.startswith(x, cmd)
-    end)
-    :totable()
+  return list_complete(cmd, vim.tbl_keys(commands))
 end
 
 ---@param ctx vim.api.keyset.create_user_command.command_args

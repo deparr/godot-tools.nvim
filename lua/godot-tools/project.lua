@@ -5,6 +5,30 @@ M.main_scene = nil
 ---@type string?
 M.root = nil
 
+---@param path string
+---@return gdtools.GodotConfig?
+function M.parse_config_file(path)
+  local log = require "godot-tools.log"
+
+  local f, err = io.open(path, "r")
+  if not f then
+    log.error("project.parse: unable to open %s: %s", path, err)
+    return
+  end
+
+  local source = f:read "a"
+  f:close()
+
+  local Parser = require "godot-tools.project.parser"
+  local ok, res = pcall(Parser.parse, source)
+  if not ok then
+    log.error("project.godot parse error: %s", res)
+    return
+  end
+
+  return res
+end
+
 function M.update_root()
   M.root = vim.fs.root(0, "project.godot")
   M.root = M.root and vim.fs.normalize(M.root) or nil
@@ -20,29 +44,35 @@ function M.update_info()
   end
 
   local project_file = vim.fs.joinpath(M.root, "project.godot")
-  local f, err = io.open(project_file, "r")
-  if not f then
-    log.error("Unable to open project.godot: %s", err)
+  local project = M.parse_config_file(project_file)
+  if not project then
     return
   end
 
-  local config_source = f:read "a"
-  f:close()
-
-  local Parser = require "godot-tools.project.parser"
-  local ok, res = pcall(Parser.parse, config_source)
-  if not ok then
-    log.error("project.godot parse error: %s", res)
-    return
-  end
-
-  if res.application then
-    local main_ref = res.application["run/main_scene"]
+  if project.application then
+    local main_ref = project.application["run/main_scene"]
     if main_ref then
       M.main_scene = vim.startswith(main_ref, "uid://") and { uid = main_ref } or { path = main_ref }
     end
   end
   -- log.info "updated project info"
+end
+
+---@return string[]? # *Runnable* preset names
+function M.runnable_preset_names()
+  local log = require "godot-tools.log"
+  if not M.root then
+    log.error "No project root!"
+    return
+  end
+
+  local export_file = vim.fs.joinpath(M.root, "export_presets.cfg")
+  local presets = M.parse_config_file(export_file)
+  if not presets then
+    return
+  end
+
+  return vim.tbl_values(presets.runnable_presets)
 end
 
 local watch_state = {

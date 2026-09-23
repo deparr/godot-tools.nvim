@@ -55,6 +55,8 @@ error "requiring a meta file is a bug"
 ---@field to string
 ---@field method string
 
+---@alias gdtools.GodotConfig table<string, gdtools.Variant>
+
 ---@alias gdtools.Resource.Value table<string, gdtools.Variant>
 
 ---@alias gdtools.Variant

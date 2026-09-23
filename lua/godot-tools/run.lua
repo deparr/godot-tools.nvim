@@ -2,6 +2,7 @@ local M = {}
 
 local config = require "godot-tools.config"
 local log = require "godot-tools.log"
+local util = require "godot-tools.util"
 
 local api = vim.api
 
@@ -99,6 +100,8 @@ function M.editor()
     log.error "project root is missing, not opening editor"
     return
   end
+  -- TODO starting the editor with the _console bin keeps a separate process around
+  -- for the console, not the biggest deal but kinda annoying
   local args = { config.godot_bin, "--editor", "--path", project.root }
   vim.system(args, { detach = true, cwd = project.root })
 end
@@ -118,6 +121,45 @@ function M.toggle_console()
     api.nvim_win_resize(M.state.console_win, -1, 20, { anchor = "bottom" })
     api.nvim_win_set_buf(M.state.console_win, M.state.console_buf)
   end
+end
+
+local function strip_ansi(s)
+  return (s:gsub("\27%[[%d;:]*[A-Za-z]", ""))
+end
+
+---@class gdtools.ExportOpts
+---@field mode "debug"|"release"
+---@field path_override string?
+
+---@param preset string
+---@param opts gdtools.ExportOpts?
+function M.export_runnable(preset, opts)
+  if type(preset) ~= "string" then
+    log.error "run.export_preset: preset must be a string!"
+    return
+  end
+  opts = opts or { mode = "debug" }
+  if not opts.mode then
+    opts.mode = "debug"
+  end
+
+  local proj_path = require("godot-tools.project").root or vim.fn.getcwd()
+  local mode_arg = opts.mode == "release" and "--export-release" or "--export-debug"
+  local path_arg = opts.path_override and vim.fs.normalize(vim.fs.abspath(opts.path_override)) or nil
+  local argv = { config.godot_bin, "--path", proj_path, "--no-header", "--headless", mode_arg, preset, path_arg }
+
+  vim.system(argv, {
+    text = true,
+  }, function(stat)
+    if stat.code ~= 0 then
+      local cleaned_error = vim.split(strip_ansi(stat.stderr), "\n")
+      local title = ("Export Result for %s"):format(preset)
+      util.open_float(cleaned_error, { title = title, close_on_focus_loss = true })
+    else
+      log.info("Exported '%s' successfully", preset)
+    end
+  end)
+  log.info("Starting export '%s'", preset)
 end
 
 function M.health_check()

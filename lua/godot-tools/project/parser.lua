@@ -18,6 +18,7 @@ Parser.comment_start = str2class "#;"
 Parser.number = str2class "0123456789.-abcdefABCDEFx"
 Parser.pat_ident_start = '^[%w_"]$'
 Parser.pat_ident_cont = "^[%w_%.%/]$"
+Parser.pat_key_cont = "^[%w_%@%.%/]$"
 Parser.pat_num_start = "^[%-%d]$"
 
 ---@param src string source to parse
@@ -181,7 +182,7 @@ function Parser:take_section_values()
       break
     end
 
-    local key = self:take_ident()
+    local key = self:take_pat_or_string(Parser.pat_key_cont)
     self:skip_while_any(Parser.whitespace)
     self:expect "="
     self:skip_while_any(Parser.whitespace)
@@ -285,7 +286,7 @@ function Parser:take_variant()
 
   -- constructors and builtin constants
   elseif cur:match(Parser.pat_ident_start) then
-    local cons = self:take_ident()
+    local cons = self:take_pat_or_string(Parser.pat_ident_cont)
     if cons == "true" or cons == "false" then
       return cons == "true"
     elseif cons == "null" then
@@ -338,7 +339,7 @@ function Parser:take_object()
   local start = self.pos
   self:skip_whitespace()
   self:expect "("
-  local class = self:take_ident()
+  local class = self:take_pat_or_string(Parser.pat_ident_cont)
   self:skip_whitespace()
   self:expect ","
   self:skip_whitespace()
@@ -376,9 +377,11 @@ function Parser:take_object()
   return { _tag = "object", class = class, data = data }
 end
 
+---@param pat string lua pattern
 ---@return string
-function Parser:take_ident()
+function Parser:take_pat_or_string(pat)
   local start = self.pos
+  local val
   if self:at() == '"' then
     local var = self:take_variant()
     if type(var) ~= "string" then
@@ -386,15 +389,17 @@ function Parser:take_ident()
       var_type = var_type == "table" and var._tag or var_type
       error(("expected ident at %d, got var: %s"):format(start, var_type))
     end
-    return var
+    val = var
+  else
+    while not self:eof() and self:at():match(pat) do
+      self:advance()
+    end
+    if self:eof() then
+      error "Unexpected eof"
+    end
+    val = self.src:sub(start, self.pos - 1)
   end
-  while not self:eof() and self:at():match(Parser.pat_ident_cont) do
-    self:advance()
-  end
-  if self:eof() then
-    error "Unexpected eof"
-  end
-  return self.src:sub(start, self.pos - 1)
+  return val
 end
 
 function Parser:eof()
