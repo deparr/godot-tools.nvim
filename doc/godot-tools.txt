@@ -75,7 +75,7 @@ Runs the project's main scene. Equivalent to |godot-tools-run.main|.
 >vim
     :Godot run
 <
-With no arguments, `scene` opens a picker of `tscn` files and runs the
+With no arguments, `run` opens a picker of `tscn` files and runs the
 selected file.
 
 >vim
@@ -88,7 +88,7 @@ Equivalent to |godot-tools-run.scene|.
 >vim
     :Godot! run
 <
-With bang, `scene` reruns the previously run scene.
+With bang, `run` reruns the previously run scene.
 Equivalent to |godot-tools-run.last|
 
                                                                 *:Godot_preview*
@@ -128,6 +128,21 @@ This will always be the project pointed to by: >lua
     require("godot-tools.project").root
 <
 Equivalent to |godot-tools-run.editor|
+
+                                                                 *:Godot_export*
+>vim
+    :Godot export
+<
+With no arguments, `export` will open a picker of the project's runnable
+export presets. The selected preset will be exported in debug mode.
+Equivalent to |godot-tools-run.export|.
+
+>vim
+    :Godot export {preset} {mode}
+<
+Exports the named preset {preset} in mode {mode}. Presets are defined by the
+project; mode is either "debug" or "release".
+Equivalent to |godot-tools-run.export|.
 
                                                                    *:Godot_open*
 >vim
@@ -181,14 +196,14 @@ main()                                                    *godot-tools-run.main*
 last()                                                    *godot-tools-run.last*
     Reruns the previously run scene.
 
-    Equivalent to `:Godot! scene`
+    Equivalent to `:Godot! run
 
     See |godot-tools-run.scene| for more detail on running scenes.
 
 scene({ref})                                             *godot-tools-run.scene*
     Run the scene specifed by `ref`
 
-    Equivalent to `:Godot scene`
+    Equivalent to `:Godot run
 
     Parameters: ~
       • {ref}  (`gdtools.Ref`) scene to run. prefers uid if both uid and path
@@ -211,6 +226,15 @@ editor()                                                *godot-tools-run.editor*
     The actual godot command run is >bash
     godot --edit ${project_root}/project.godot
 <
+
+export_runnable({preset}, {opts})                       *godot-tools.run.export*
+    Exports the project using one of it's defined runnable presets.
+
+    Parameters: ~
+      • {preset}  (`string`) preset to export. Defined by the project.
+      • {opts}  (`gdtools.ExportOpts`) extra export options:
+            - mode:          (`"debug"|"release"`) godot export mode.
+            - path_override  (`string`) output path override
 
 toggle_console()                                *godot-tools-run.toggle_console*
     Toggle visibility of the godot-tools console window.
