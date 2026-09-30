@@ -29,9 +29,9 @@ vim.pack.add({ "https://github.com/deparr/godot-tools.nvim" })
 
 In Godot, go to `Editor Settings > Text Editor > External` and set the following:
 
-    - exec_path -> your/path/to/nvim
-    - exec_flags -> `--server 127.0.0.1:6004 --remote-send "<ESC><C-\><C-N>:Godot open {file} {line} {col}<CR>"`
-    - use_external -> `true`
+- exec_path -> your/path/to/nvim
+- exec_flags -> `--server 127.0.0.1:6004 --remote-send "<ESC><C-\><C-N>:Godot open {file} {line} {col}<CR>"`
+- use_external -> `true`
 
 **3.** Back in nvim, restart or run `:Godot connect` to start listening for rpc messages.
 
