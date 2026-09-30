@@ -57,6 +57,7 @@ function M.scene(ref)
   end
 
   -- clean up our old buffer and win
+  -- todo this should use nvim_api instead of the interactive commands
   if api.nvim_buf_is_valid(M.state.console_buf) then
     api.nvim_buf_delete(M.state.console_buf, { force = true })
   end
@@ -74,7 +75,7 @@ function M.scene(ref)
   vim.bo.filetype = "gdtools-console"
   api.nvim_set_option_value("scrolloff", 999, { win = M.state.console_win, scope = "local" })
 
-  local argv = { config.godot_bin, "--path", project.root, "--scene", scene_id }
+  local argv = { config.run.bin_console, "--path", project.root, "--scene", scene_id }
   local id
   id = vim.fn.jobstart(argv, {
     term = true,
@@ -94,15 +95,18 @@ end
 
 --- Opens opens the project at
 --- `require("godot-tools.project").root` in the godot editor
+---
+--- TODO ~~starting the editor with the _console bin keeps a separate process around
+--- for the console, not the biggest deal but kinda annoying~~
+--- So actually, detach doesn't properly detach from non _console bins. Powershell hangs on
+--- exit if the non _console bin is still running. Need to further test this on pwsh and linux
 function M.editor()
   local project = require "godot-tools.project"
   if not project.root then
     log.error "project root is missing, not opening editor"
     return
   end
-  -- TODO starting the editor with the _console bin keeps a separate process around
-  -- for the console, not the biggest deal but kinda annoying
-  local args = { config.godot_bin, "--editor", "--path", project.root }
+  local args = { config.run.bin, "--editor", "--path", project.root }
   vim.system(args, { detach = true, cwd = project.root })
 end
 
@@ -146,11 +150,10 @@ function M.export_runnable(preset, opts)
   local proj_path = require("godot-tools.project").root or vim.fn.getcwd()
   local mode_arg = opts.mode == "release" and "--export-release" or "--export-debug"
   local path_arg = opts.path_override and vim.fs.normalize(vim.fs.abspath(opts.path_override)) or nil
-  local argv = { config.godot_bin, "--path", proj_path, "--no-header", "--headless", mode_arg, preset, path_arg }
+  local argv = { config.run.bin, "--path", proj_path, "--no-header", "--headless", mode_arg, preset, path_arg }
 
-  vim.system(argv, {
-    text = true,
-  }, function(stat)
+  -- todo exports can be kinda long lived, this should probably be a tracked job
+  vim.system(argv, { text = true }, function(stat)
     if stat.code ~= 0 then
       local cleaned_error = vim.split(strip_ansi(stat.stderr), "\n")
       local title = ("Export Result for %s"):format(preset)
@@ -163,10 +166,18 @@ function M.export_runnable(preset, opts)
 end
 
 function M.health_check()
-  if vim.fn.executable(config.godot_bin) == 0 then
-    vim.health.warn(("'%s' is not executable."):format(config.godot_bin))
+  if vim.fn.executable(config.run.bin) == 0 then
+    vim.health.warn(("'%s' is not executable."):format(config.run.bin))
   else
-    vim.health.ok(("%s is executable"):format(config.godot_bin))
+    vim.health.ok(("%s is executable"):format(config.run.bin))
+  end
+
+  if config.run.bin_console ~= config.run.bin then
+    if vim.fn.executable(config.run.bin_console) == 0 then
+      vim.health.warn(("'%s' is not executable."):format(config.run.bin_console))
+    else
+      vim.health.ok(("%s is executable"):format(config.run.bin_console))
+    end
   end
 
   local num_jobs = #vim.tbl_keys(M.state.jobs)
