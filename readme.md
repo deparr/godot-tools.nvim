@@ -10,7 +10,7 @@
 
 ## editor quick start
 
-1. Install the plugin:
+**1.** Install the plugin:
 
 ```lua
 -- lazy.nvim
@@ -25,18 +25,19 @@ vim.pack.add({ "https://github.com/deparr/godot-tools.nvim" })
 > You **do not** need to call `require("godot-tools").setup()` to use
 > the default configuration.
 
-2. Configure Godot to use Neovim
+**2.** Configure Godot to use Neovim
 
 In Godot, go to `Editor Settings > Text Editor > External` and set the following:
+
     - exec_path -> your/path/to/nvim
     - exec_flags -> `--server 127.0.0.1:6004 --remote-send "<ESC><C-\><C-N>:Godot open {file} {line} {col}<CR>"`
     - use_external -> `true`
 
-3. Back in nvim, restart or run `:Godot connect` to start listening for rpc messages.
+**3.** Back in nvim, restart or run `:Godot connect` to start listening for rpc messages.
 
 At this point you should be able to click on scripts in Godot and have them open in Neovim.
 
-4. Unrelated to the plugin, but while you're in Godot settings, go ahead and disable
+**4.** Unrelated to the plugin, but while you're in Godot settings, go ahead and disable
     `Network > Language Server > Smart Resolve`, it only makes the lsp worse
     in my experience
 
