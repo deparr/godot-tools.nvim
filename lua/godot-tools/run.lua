@@ -106,8 +106,13 @@ function M.editor()
     log.error "project root is missing, not opening editor"
     return
   end
-  local args = { config.run.bin, "--editor", "--path", project.root }
-  vim.system(args, { detach = true, cwd = project.root })
+  local args = { config.run.bin_console, "--editor", "--path", project.root }
+  vim.system(args, {
+    detach = true,
+    cwd = project.root,
+    stderr = false,
+    stdout = false,
+  })
 end
 
 --- toggles visibility of the godot console buffer
